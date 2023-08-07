@@ -3,7 +3,6 @@ rm(list=ls());graphics.off();rm(.SavedPlots);gc();windows(record=T)
 #-------------------------------------------------------------------------------  
 # READ ECOSIM TIMESERIES FILE
 #-------------------------------------------------------------------------------
-
 ## This function is designed to read and process data from an ecosim timeseries 
 ## file (assumed to be in CSV format) and return four data frames: 
 ## obsB.head, obsB, obsC.head, and obsC. 
@@ -28,6 +27,18 @@ f.read_ecosim_timeseries = function(filename, num_row_header = 4){
   ret = list(obsB.head,obsB,obsC.head,obsC)
   names(ret) = c('obsB.head','obsB','obsC.head','obsC')
   return(ret)
+}
+
+#-------------------------------------------------------------------------------  
+# FUNCTION TO STANDARDIZE EWE FUNCTIONAL GROUP NAMES
+#-------------------------------------------------------------------------------
+f.standardize_group_names <- function(fg_names){
+  fg_names = sub("\\.$", "", fg_names)
+  fg_names = sub("\\.\\.", ".", fg_names)
+  fg_names = gsub("(\\d)\\.(\\d)", "\\1-\\2", fg_names)
+  fg_names = gsub("\\.yr", "+yr", fg_names)
+  fg_names = gsub("\\.", "_", fg_names)
+  fg_names = gsub("yr", "", fg_names)
 }
 
 #-------------------------------------------------------------------------------  

@@ -10,16 +10,7 @@ rm(list=ls()); graphics.off(); gc()
 source("./functions.R") ## Pull in functions
 library(dplyr)
 
-## Input set up ----------------------------------------------------------------
-dir_pdf_out = "./PDF_plots/"
-ewe_name = "GoMLME_v2.01"
-sim_scenario = "ecosim_spa_01_adjTry3"
-spa_scenario = "spa_01"
-obs_TS_name  = "TS_updated_IB13"
-num_skip_spa = 32
-num_skip_sim = 13
-
-## Set outputs 
+## User-defined output parameters ----------------------------------------------
 today_date <- format(Sys.Date(), "%Y-%m-%d")
 plot_name_xY = paste0("Biomass_scaled_xY_", today_date)
 plot_name_xM = paste0("Biomass_scaled_xM_", today_date)
@@ -30,10 +21,18 @@ num_plot_pages = 4 ## Sets number of pages for PDF file
 init_years_toscale  = 2016-1980 ## 36. This will scale all outputs to the global average
 init_months_toscale = init_years_toscale * 12
 
+## Input set up ----------------------------------------------------------------
+dir_pdf_out = "./PDF_plots/"
+ewe_name = "EwE_Outputs"
+sim_scenario = "sim-spa_01"
+spa_scenario = "spa_01"
+obs_TS_name  = "TS_updated_IB13"
+num_skip_spa = 32
+num_skip_sim = 13
+
 ## -----------------------------------------------------------------------------
 ## Read-in ANNUAL Observed, Ecosim, and Ecospace TS
-
-dir_sim = paste0("./", ewe_name, "/", sim_scenario, "/")
+dir_sim = paste0("./", ewe_name, "/ecosim_", sim_scenario, "/")
 dir_spa = paste0("./", ewe_name, "/", spa_scenario, "/")
 
 ## Read-in Ecosim annual biomass 

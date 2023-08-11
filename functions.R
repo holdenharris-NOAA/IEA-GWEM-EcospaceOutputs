@@ -1,8 +1,8 @@
 rm(list=ls());graphics.off();rm(.SavedPlots);gc();windows(record=T)
 
-#-------------------------------------------------------------------------------  
-# READ ECOSIM TIMESERIES FILE
-#-------------------------------------------------------------------------------
+##-------------------------------------------------------------------------------  
+## READ ECOSIM TIMESERIES FILE
+##-------------------------------------------------------------------------------
 ## This function is designed to read and process data from an ecosim timeseries 
 ## file (assumed to be in CSV format) and return four data frames: 
 ## obsB.head, obsB, obsC.head, and obsC. 
@@ -29,9 +29,9 @@ f.read_ecosim_timeseries = function(filename, num_row_header = 4){
   return(ret)
 }
 
-#-------------------------------------------------------------------------------  
-# FUNCTION TO STANDARDIZE EWE FUNCTIONAL GROUP NAMES
-#-------------------------------------------------------------------------------
+##-------------------------------------------------------------------------------  
+## FUNCTION TO STANDARDIZE EWE FUNCTIONAL GROUP NAMES
+##-------------------------------------------------------------------------------
 f.standardize_group_names <- function(fg_names){
   fg_names = sub("\\.$", "", fg_names)
   fg_names = sub("\\.\\.", ".", fg_names)
@@ -41,9 +41,9 @@ f.standardize_group_names <- function(fg_names){
   fg_names = gsub("yr", "", fg_names)
 }
 
-#-------------------------------------------------------------------------------  
-# FUNCTION TO SET MULTIPANEL PLOT DIMENSIONS
-#-------------------------------------------------------------------------------
+##-------------------------------------------------------------------------------  
+## FUNCTION TO SET MULTIPANEL PLOT DIMENSIONS
+##-------------------------------------------------------------------------------
 f.get_plot_dims = function(x=nrow(obsB.head),round2=4){
   #x=nrow(df.names)/2;round2=4
   x2=plyr::round_any(x,round2,f=ceiling)
@@ -58,9 +58,34 @@ f.get_plot_dims = function(x=nrow(obsB.head),round2=4){
   return(mfrow.pars)
 }
 
-#-------------------------------------------------------------------------------  
-# FUNCTION MAKE PLOT
-#-------------------------------------------------------------------------------
+##-------------------------------------------------------------------------------  
+## FUNCTION TO SET SET SKIPLINES FOR READING IN ECOSPACE FILES
+##-------------------------------------------------------------------------------
+## Find the line number where 'Year' appears in the first column
+f.find_start_line <- function(filename, flag = "Year") {
+  con <- file(filename, open = "r")
+  line_number <- 0
+  while(TRUE) {
+    line <- readLines(con, n = 1)
+    line_number <- line_number + 1
+    if(length(line) == 0) { # End of file
+      break
+    }
+    fields <- strsplit(line, ",")[[1]]
+    # Check if fields has any elements before attempting to access its first element
+    if(length(fields) >= 1 && fields[1] == flag) {
+      close(con)
+      return(line_number - 2) # Minus 2 because headers are counted in read.csv and we want to start on the next line
+    }
+  }
+  close(con)
+  stop("Year not found in the first column.")
+}
+
+
+##-------------------------------------------------------------------------------  
+## FUNCTION MAKE PLOT
+##-------------------------------------------------------------------------------
 
 ## Note that X must be a Date object
 f.plot_outputs_obs_sim_spa <- function(x, grp, spaB_scaled, simB_scaled, obsB_scaled,

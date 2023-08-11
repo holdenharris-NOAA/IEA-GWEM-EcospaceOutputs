@@ -10,10 +10,20 @@ rm(list=ls()); graphics.off(); gc()
 source("./functions.R") ## Pull in functions
 library(dplyr)
 
+## Input set up ----------------------------------------------------------------
+dir_pdf_out = "./PDF_plots/"
+ewe_name = "EwE_Outputs"
+sim_scenario = "sim-spa_01"
+spa_scenario = "spa_00"
+obs_TS_name  = "TS_updated_IB13"
+#num_skip_spa = 32
+#num_skip_sim = 13
+
 ## User-defined output parameters ----------------------------------------------
 today_date <- format(Sys.Date(), "%Y-%m-%d")
-plot_name_xY = paste0("Biomass_scaled_xY_", today_date)
-plot_name_xM = paste0("Biomass_scaled_xM_", today_date)
+out_file_notes = ""
+plot_name_xY = paste0("Biomass_scaled_xY_", spa_scenario, out_file_notes)
+plot_name_xM = paste0("Biomass_scaled_xM_", spa_scenario, out_file_notes)
 num_plot_pages = 4 ## Sets number of pages for PDF file
 
 ## Set scaling parameters 
@@ -21,21 +31,16 @@ num_plot_pages = 4 ## Sets number of pages for PDF file
 init_years_toscale  = 2016-1980 ## 36. This will scale all outputs to the global average
 init_months_toscale = init_years_toscale * 12
 
-## Input set up ----------------------------------------------------------------
-dir_pdf_out = "./PDF_plots/"
-ewe_name = "EwE_Outputs"
-sim_scenario = "sim-spa_01"
-spa_scenario = "spa_01"
-obs_TS_name  = "TS_updated_IB13"
-num_skip_spa = 32
-num_skip_sim = 13
-
 ## -----------------------------------------------------------------------------
+##
 ## Read-in ANNUAL Observed, Ecosim, and Ecospace TS
 dir_sim = paste0("./", ewe_name, "/ecosim_", sim_scenario, "/")
 dir_spa = paste0("./", ewe_name, "/", spa_scenario, "/")
 
 ## Read-in Ecosim annual biomass 
+filename = paste0(dir_sim, "biomass_annual.csv")
+num_skip_sim = f.find_start_line(filename, flag = 1980)
+
 simB_xY <- read.csv(paste0(dir_sim, "biomass_annual.csv"), skip = num_skip_sim)
 years = simB_xY$year.group ## Get date range from Ecosim
 simB_xY$year.group = NULL
@@ -44,7 +49,10 @@ simB_xY$year.group = NULL
 simC_xY <- read.csv(paste0(dir_sim, "catch_annual.csv"), skip = num_skip_sim)
 simC_xY$year.group = NULL
 
-## Read-in Ecospace annual biomass
+## Read-in Ecospace annual biomass and catches ---------------------------------
+filename <- paste0(dir_spa, "Ecospace_Annual_Average_Biomass.csv")
+num_skip_spa <- f.find_start_line(filename)
+         
 spaB_xY <- read.csv(paste0(dir_spa, "Ecospace_Annual_Average_Biomass.csv"), 
                     skip = num_skip_spa, header = TRUE)
 spaB_xY$Year = NULL
@@ -54,16 +62,7 @@ spaC_xY <- read.csv(paste0(dir_spa, "Ecospace_Annual_Average_Catch.csv"),
                     skip = num_skip_spa, header = TRUE)
 spaC_xY$Year = NULL
 
-## Standardize FG names
-#fg_names = colnames(spaB_xY)
-#num_fg = length(fg_names)
-#fg_names = sub("\\.$", "", fg_names)
-#fg_names = sub("\\.\\.", ".", fg_names)
-#fg_names = gsub("(\\d)\\.(\\d)", "\\1-\\2", fg_names)
-#fg_names = gsub("\\.yr", "+yr", fg_names)
-#fg_names = gsub("\\.", "_", fg_names)
-#fg_names = gsub("yr", "", fg_names)
-
+## Standardize FG names --------------------------------------------------------
 fg_names = f.standardize_group_names(colnames(spaB_xY))
 num_fg = length(fg_names)
 
@@ -92,7 +91,7 @@ simB_xM$timestep.group = NULL
 simC_xM <- read.csv(paste0(dir_sim, "catch_monthly.csv"), skip = num_skip_sim)
 simC_xM$timestep.group = NULL
 
-## Ecospace
+## Ecospace -------------------------------------------------------------------
 spaB_xM <- read.csv(paste0(dir_spa, "Ecospace_Average_Biomass.csv"), 
                     skip = num_skip_spa, header = TRUE)
 spaB_xM$TimeStep = NULL

@@ -62,7 +62,7 @@ f.get_plot_dims = function(x=nrow(obsB.head),round2=4){
 ## FUNCTION TO SET SET SKIPLINES FOR READING IN ECOSPACE FILES
 ##-------------------------------------------------------------------------------
 ## Find the line number where 'Year' appears in the first column
-f.find_start_line <- function(filename, flag = "Year") {
+f.find_start_line <- function(filename, flag = 1980) {
   con <- file(filename, open = "r")
   line_number <- 0
   while(TRUE) {
@@ -79,9 +79,8 @@ f.find_start_line <- function(filename, flag = "Year") {
     }
   }
   close(con)
-  stop("Year not found in the first column.")
+  stop(paste(flag, "not found in the first column."))
 }
-
 
 ##-------------------------------------------------------------------------------  
 ## FUNCTION MAKE PLOT

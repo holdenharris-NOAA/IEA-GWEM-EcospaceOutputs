@@ -11,13 +11,12 @@ source("./functions.R") ## Pull in functions
 library(dplyr)
 
 ## Input set up ----------------------------------------------------------------
-dir_pdf_out = "./PDF_plots/"
-ewe_name = "EwE_Outputs"
+dir_pdf_out  = "./PDF_plots/"
+ewe_name     = "EwE_Outputs"
 sim_scenario = "sim-spa_01"
-spa_scenario = "spa_00"
+spa_scenario = "spa_01"
 obs_TS_name  = "TS_updated_IB13"
-#num_skip_spa = 32
-#num_skip_sim = 13
+srt_year     = 1980
 
 ## User-defined output parameters ----------------------------------------------
 today_date <- format(Sys.Date(), "%Y-%m-%d")
@@ -39,7 +38,7 @@ dir_spa = paste0("./", ewe_name, "/", spa_scenario, "/")
 
 ## Read-in Ecosim annual biomass 
 filename = paste0(dir_sim, "biomass_annual.csv")
-num_skip_sim = f.find_start_line(filename, flag = 1980)
+num_skip_sim = f.find_start_line(filename, flag = srt_year)
 
 simB_xY <- read.csv(paste0(dir_sim, "biomass_annual.csv"), skip = num_skip_sim)
 years = simB_xY$year.group ## Get date range from Ecosim
@@ -51,7 +50,7 @@ simC_xY$year.group = NULL
 
 ## Read-in Ecospace annual biomass and catches ---------------------------------
 filename <- paste0(dir_spa, "Ecospace_Annual_Average_Biomass.csv")
-num_skip_spa <- f.find_start_line(filename)
+num_skip_spa <- f.find_start_line(filename, flag = "Year")
          
 spaB_xY <- read.csv(paste0(dir_spa, "Ecospace_Annual_Average_Biomass.csv"), 
                     skip = num_skip_spa, header = TRUE)
@@ -124,6 +123,7 @@ colnames(obsC) = obsC.head$group_name
 ## -----------------------------------------------------------------------------
 ## Plot and compare ANNUAL biomass 
 pdf(paste0(dir_pdf_out, plot_name_xY, ".PDF"), onefile = TRUE)
+
 ## Set number of plots per page
 set.mfrow = f.get_plot_dims(x=num_fg / num_plot_pages, round2=4)
 par(mfrow=set.mfrow, mar=c(1, 2, 1, 2))

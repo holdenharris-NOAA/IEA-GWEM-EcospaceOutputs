@@ -236,7 +236,7 @@ num_catches = nrow(obsC.head)
 fleets <- unique(sapply(strsplit(colnames(spaC_xY.a2), "__"), `[`, 1)) # Extract the part before "__" and get unique values
 fleet_cols <- data.frame(fleet_name = fleets,
                          colors = rainbow(length(fleets)))
-fleet_cols = rbind(fleet_cols, c("AVGERAGE", "gray60"))
+fleet_cols = rbind(fleet_cols, c("AVERAGE", "gray60"))
 fleet_cols$fleet_out = gsub('c_',  'REC_', fleet_cols$fleet_name)
 fleet_cols$fleet_out = gsub('mm_', 'COM_', fleet_cols$fleet_out)
 fleet_cols$fleet_out = gsub('_', ' ', fleet_cols$fleet_out)

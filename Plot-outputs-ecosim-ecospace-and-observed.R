@@ -23,6 +23,7 @@ today_date <- format(Sys.Date(), "%Y-%m-%d")
 out_file_notes = ""
 plot_name_xY = paste0("Biomass_scaled_xY_", spa_scenario, out_file_notes)
 plot_name_xM = paste0("Biomass_scaled_xM_", spa_scenario, out_file_notes)
+plot_name_C  = paste0("Catches_", spa_scenario, out_file_notes)
 num_plot_pages = 4 ## Sets number of pages for PDF file
 
 ## Set scaling parameters 
@@ -123,96 +124,94 @@ colnames(obsC) = obsC.head$group_name
 ## -----------------------------------------------------------------------------
 ## Plot and compare ANNUAL biomass 
 pdf(paste0(dir_pdf_out, plot_name_xY, ".PDF"), onefile = TRUE)
-
-## Set number of plots per page
-set.mfrow = f.get_plot_dims(x=num_fg / num_plot_pages, round2=4)
-par(mfrow=set.mfrow, mar=c(1, 2, 1, 2))
-
-for(i in 1:num_fg){
-  #i=6
-  grp  = fg_df$group_name[i]
-  spaB = spaB_xY[,i] 
-  simB = simB_xY[,i] 
   
-  ## Check to see if observed data is available
-  obsB_scaled=NULL
-  if(i %in% obsB.head$pool_code){
-    obs.idx     = which(obsB.head$pool_code==i)
-    obs_df      = suppressWarnings( ## Suppress warnings thrown when obs not available
-      data.frame(year_series, obsB = as.numeric(obsB[ ,obs.idx]))
-    )
-    obsB_scaled = obs_df$obsB / mean(na.omit(obs_df$obsB)[1:init_years_toscale], na.rm = TRUE)
-    rm(obs_df)
-    rm(obs.idx)
+  ## Set number of plots per page
+  set.mfrow = f.get_plot_dims(x=num_fg / num_plot_pages, round2=4)
+  par(mfrow=set.mfrow, mar=c(1, 2, 1, 2))
+  
+  for(i in 1:num_fg){
+    #i=6
+    grp  = fg_df$group_name[i]
+    spaB = spaB_xY[,i] 
+    simB = simB_xY[,i] 
+    
+    ## Check to see if observed data is available
+    obsB_scaled=NULL
+    if(i %in% obsB.head$pool_code){
+      obs.idx     = which(obsB.head$pool_code==i)
+      obs_df      = suppressWarnings( ## Suppress warnings thrown when obs not available
+        data.frame(year_series, obsB = as.numeric(obsB[ ,obs.idx]))
+      )
+      obsB_scaled = obs_df$obsB / mean(na.omit(obs_df$obsB)[1:init_years_toscale], na.rm = TRUE)
+      rm(obs_df)
+      rm(obs.idx)
+    }
+    
+    ## Scale to the average of a given timeframe
+    spaB_scaled = spaB / mean(spaB[1:init_years_toscale], na.rm = TRUE)
+    simB_scaled = simB / mean(simB[1:init_years_toscale], na.rm = TRUE)
+    
+    ## Plot colors
+    col_obs = 'black'
+    col_sim = rgb(0.2, 0.7, .1, alpha = 0.9) ## rgb (red, green, blue, alpha)
+    col_spa = rgb(0.1, 0, 1, alpha = 0.8) 
+    
+    ## Call plotting function
+    f.plot_outputs_obs_sim_spa(x = year_series, grp = grp, 
+                               spaB_scaled = spaB_scaled, simB_scaled = simB_scaled, 
+                               obsB_scaled = obsB_scaled, 
+                               col_spa = col_spa, col_sim = col_sim, col_obs = col_obs,
+                               num_fg = length(fg_names), num_plot_pages = 4, 
+                               sim_lwd = 2, spa_lwd = 2)
   }
-  
-  ## Scale to the average of a given timeframe
-  spaB_scaled = spaB / mean(spaB[1:init_years_toscale], na.rm = TRUE)
-  simB_scaled = simB / mean(simB[1:init_years_toscale], na.rm = TRUE)
-  
-  ## Plot colors
-  col_obs = 'black'
-  col_sim = rgb(0.2, 0.7, .1, alpha = 0.9) ## rgb (red, green, blue, alpha)
-  col_spa = rgb(0.1, 0, 1, alpha = 0.8) 
-  
-  ## Call plotting function
-  f.plot_outputs_obs_sim_spa(x = year_series, grp = grp, 
-                             spaB_scaled = spaB_scaled, simB_scaled = simB_scaled, 
-                             obsB_scaled = obsB_scaled, 
-                             col_spa = col_spa, col_sim = col_sim, col_obs = col_obs,
-                             num_fg = length(fg_names), num_plot_pages = 4, 
-                             sim_lwd = 2, spa_lwd = 2)
-}
 dev.off()    
 
 ## -----------------------------------------------------------------------------
 ## Plot and compare MONTHLY biomass 
 pdf(paste0(dir_pdf_out, plot_name_xM, ".PDF"), onefile = TRUE)
-## Set number of plots per page
-set.mfrow = f.get_plot_dims(x=num_fg / num_plot_pages, round2=4)
-par(mfrow=set.mfrow, mar=c(1.2, 2, 1.2, 2))
-
-for(i in 1:num_fg){
-  #i=6
-  grp = fg_df$group_name[i]
-  spaB = spaB_xM[,i] 
-  simB = simB_xM[,i] 
+  ## Set number of plots per page
+  set.mfrow = f.get_plot_dims(x=num_fg / num_plot_pages, round2=4)
+  par(mfrow=set.mfrow, mar=c(1.2, 2, 1.2, 2))
   
-  ## Check to see if observed data is available
-  obsB_scaled=NULL
-  if(i %in% obsB.head$pool_code){
-    obs.idx     = which(obsB.head$pool_code==i)
-    obs_df      = suppressWarnings( ## Suppress warnings thrown when obs not available
-      data.frame(year_series, obsB = as.numeric(obsB[ ,obs.idx]))
-    )
-    obsB_scaled = obs_df$obsB / mean(na.omit(obs_df$obsB)[1:init_years_toscale], na.rm = TRUE)
-    rm(obs_df)
-    rm(obs.idx)
+  for(i in 1:num_fg){
+    #i=6
+    grp = fg_df$group_name[i]
+    spaB = spaB_xM[,i] 
+    simB = simB_xM[,i] 
+    
+    ## Check to see if observed data is available
+    obsB_scaled=NULL
+    if(i %in% obsB.head$pool_code){
+      obs.idx     = which(obsB.head$pool_code==i)
+      obs_df      = suppressWarnings( ## Suppress warnings thrown when obs not available
+        data.frame(year_series, obsB = as.numeric(obsB[ ,obs.idx]))
+      )
+      obsB_scaled = obs_df$obsB / mean(na.omit(obs_df$obsB)[1:init_years_toscale], na.rm = TRUE)
+      rm(obs_df)
+      rm(obs.idx)
+    }
+    
+    ## Scale to the average of a given timeframe
+    spaB_scaled = spaB / mean(spaB[1:init_months_toscale], na.rm = TRUE)
+    simB_scaled = simB / mean(simB[1:init_months_toscale], na.rm = TRUE)
+    
+    ## Plot colors
+    col_obs = 'black'
+    col_sim = rgb(0.2, 0.7, .1, alpha = 0.8) ## rgb (red, green, blue, alpha)
+    col_spa = rgb(0.1, 0, 1, alpha = 0.6) 
+    
+    ## Call plotting function
+    f.plot_outputs_obs_sim_spa(x = date_series, grp = grp, 
+                               spaB_scaled = spaB_scaled, simB_scaled = simB_scaled, obsB_scaled = obsB_scaled, 
+                               col_spa = col_spa, col_sim = col_sim, col_obs = col_obs,
+                               num_fg = length(fg_names), num_plot_pages = 4, 
+                               sim_lwd = 1, spa_lwd = 1)
   }
-  
-  ## Scale to the average of a given timeframe
-  spaB_scaled = spaB / mean(spaB[1:init_months_toscale], na.rm = TRUE)
-  simB_scaled = simB / mean(simB[1:init_months_toscale], na.rm = TRUE)
-  
-  ## Plot colors
-  col_obs = 'black'
-  col_sim = rgb(0.2, 0.7, .1, alpha = 0.8) ## rgb (red, green, blue, alpha)
-  col_spa = rgb(0.1, 0, 1, alpha = 0.6) 
-  
-  ## Call plotting function
-  f.plot_outputs_obs_sim_spa(x = date_series, grp = grp, 
-                             spaB_scaled = spaB_scaled, simB_scaled = simB_scaled, obsB_scaled = obsB_scaled, 
-                             col_spa = col_spa, col_sim = col_sim, col_obs = col_obs,
-                             num_fg = length(fg_names), num_plot_pages = 4, 
-                             sim_lwd = 1, spa_lwd = 1)
-}
 dev.off()    
 
 ## -----------------------------------------------------------------------------
 ##
 ## Read-in and prepare Ecospace catches
-
-## !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 spaC_xY = lapply(dir_spa, FUN=function(x)read.csv(paste0(dir_spa, "/Ecospace_Annual_Average_Catch.csv"),skip=32,header=T))
 spaC_xY = lapply(spaC_xY, "[", -1)
@@ -232,34 +231,54 @@ for(i in 1:dim(spaC_xY.a)[3]){
   rm(tmp,arr)
 }
 
+## Get unique fleets
+num_catches = nrow(obsC.head)
+fleets <- unique(sapply(strsplit(colnames(spaC_xY.a2), "__"), `[`, 1)) # Extract the part before "__" and get unique values
+fleet_cols <- data.frame(fleet_name = fleets,
+                         colors = rainbow(length(fleets)))
+fleet_cols = rbind(fleet_cols, c("Average", "gray60"))
+c_names <- gsub("__", "_", dimnames(spaC_xY.a2)[[2]])
 
-## Plot catches 
-set.mfrow = f.get_plot_dims(x=nrow(obsC.head),round2=4)
-set.mfrow = f.get_plot_dims(x=num_fg / num_plot_pages, round2=4)
-par(mfrow=set.mfrow,mar=c(1,3,1,1))
-#for(i in 1:nrow(obsC.head)){
-
-for(i in 1:2){
-  #i=1
-  grp.num = obsC.head$pool_code[i]
-  grp = fg_names[grp.num]
-  spaC.idx = grep(grp, dimnames(spaC_xY.a2)[[2]], ignore.case = TRUE) ## Pulls all indexes of catching that group
-  #spaC.idx = which(dimnames(spaC_xY.a2)[[2]]==grp)
-  #spaC.idx = which(unique(spaC_xY.a2.grpnum)==grp.num)
-  spaC  = spaC_xY.a2[ , spaC.idx, ]
-  obsC = obsC[,i]
+## Plot catches ----------------------------------------------------------------
+pdf(paste0(dir_pdf_out, plot_name_C, ".PDF"), onefile = TRUE)
+  set.mfrow = round(f.get_plot_dims(x = num_catches, round2=2)/1.5)
+  plots_per_pg = set.mfrow[1] * set.mfrow[2]
+  par(mfrow=set.mfrow, mar=c(1,3,1,1))
   
-  #scale obsC biomass to bestfit (last) iteration
-  q = mean(spaC, na.rm=T) / mean(obsC,na.rm=T)
-  obsC = obsC*q
-  
-  plot(years, obsC, pch=16, ylim=c(min(obsC,spaC,na.rm=T)*0.8, max(obsC, spaC,na.rm=T)*1.2), 
-       cex=0.8,xlab='Year',ylab='Catch', bty='n')
-  if(is.matrix(spaC)){
-    matlines(years, spaC, lty=1, col=c(rep('gray', ncol(spaC)-1),'blue'))
+  for(i in 1:num_catches){
+    #i=17
+    if(i %in% seq(1, num_catches, by = plots_per_pg-1)) {
+      plot(0, 0, type='n', xlim=c(0,1), ylim=c(0,1), xaxt='n', yaxt='n', 
+           xlab='', ylab='', bty='n') # Create an empty plot
+      legend('topright', legend=fleet_cols$fleet_name, bty = 'n',
+             col=fleet_cols$colors, lwd =3, cex=0.6)
+    }
+    
+    grp.num = obsC.head$pool_code[i]
+    grp = fg_names[grp.num]
+    spaC.idx = grep(grp, c_names, ignore.case = TRUE) ## Pulls all indexes of catching that group
+    i_spaC  = spaC_xY.a2[ , spaC.idx, ]
+    i_obsC = obsC[,i]
+    
+    #scale i_obsC biomass to bestfit (last) iteration
+    q = mean(i_spaC, na.rm=T) / mean(i_obsC,na.rm=T)
+    i_obsC = i_obsC*q
+    
+    ## Get fleet colors
+    i_fleets = colnames(i_spaC)
+    i_fleet_prefix <- unique(sapply(strsplit(i_fleets, "__"), `[`, 1)) ## Extract the prefix from the i_fleets vector
+    matched_colors <- fleet_cols$colors[match(i_fleet_prefix, fleet_cols$fleet_name)] ## # Match the fleet_prefix to fleet_name and get the corresponding color
+    
+    ## Make plot
+    plot(years, i_obsC, pch=16, ylim=c(min(i_obsC,i_spaC,na.rm=T)*0.8, max(i_obsC, i_spaC,na.rm=T)*1.2), 
+         cex=0.8,xlab='Year',ylab='Catch', bty='n')
+    if(is.matrix(i_spaC)){
+      matlines(years, i_spaC, lty=1, col=matched_colors)
+    }
+    lines(years, rowMeans(i_spaC, na.rm = TRUE), lwd = 4, col = 'gray60') ## Plot average
+    if(is.vector(i_spaC)){
+      lines(years,i_spaC,lty=1,col='blue')
+    }
+    title(main=grp,line=-.6,cex.main=0.9)
   }
-  if(is.vector(spaC)){
-    lines(years,spaC,lty=1,col='blue')
-  }
-  title(main=grp,line=-.6,cex.main=0.9)
-}
+dev.off()

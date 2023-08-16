@@ -241,7 +241,7 @@ c_names <- gsub("__", "_", dimnames(spaC_xY.a2)[[2]])
 
 ## Plot catches ----------------------------------------------------------------
 pdf(paste0(dir_pdf_out, plot_name_C, ".PDF"), onefile = TRUE)
-  set.mfrow = round(f.get_plot_dims(x = num_catches, round2=2)/1.5)
+  set.mfrow = round(f.get_plot_dims(x = num_catches, round2=2)/2)
   plots_per_pg = set.mfrow[1] * set.mfrow[2]
   par(mfrow=set.mfrow, mar=c(1,3,1,1))
   

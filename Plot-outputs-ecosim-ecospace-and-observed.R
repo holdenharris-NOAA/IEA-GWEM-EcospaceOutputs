@@ -236,7 +236,10 @@ num_catches = nrow(obsC.head)
 fleets <- unique(sapply(strsplit(colnames(spaC_xY.a2), "__"), `[`, 1)) # Extract the part before "__" and get unique values
 fleet_cols <- data.frame(fleet_name = fleets,
                          colors = rainbow(length(fleets)))
-fleet_cols = rbind(fleet_cols, c("Average", "gray60"))
+fleet_cols = rbind(fleet_cols, c("AVGERAGE", "gray60"))
+fleet_cols$fleet_out = gsub('c_',  'REC_', fleet_cols$fleet_name)
+fleet_cols$fleet_out = gsub('mm_', 'COM_', fleet_cols$fleet_out)
+fleet_cols$fleet_out = gsub('_', ' ', fleet_cols$fleet_out)
 c_names <- gsub("__", "_", dimnames(spaC_xY.a2)[[2]])
 
 ## Plot catches ----------------------------------------------------------------
@@ -250,7 +253,7 @@ pdf(paste0(dir_pdf_out, plot_name_C, ".PDF"), onefile = TRUE)
     if(i %in% seq(1, num_catches, by = plots_per_pg-1)) {
       plot(0, 0, type='n', xlim=c(0,1), ylim=c(0,1), xaxt='n', yaxt='n', 
            xlab='', ylab='', bty='n') # Create an empty plot
-      legend('topright', legend=fleet_cols$fleet_name, bty = 'n',
+      legend('top', legend = fleet_cols$fleet_out, bty = 'n',
              col=fleet_cols$colors, lwd =3, cex=0.6)
     }
     
@@ -279,6 +282,7 @@ pdf(paste0(dir_pdf_out, plot_name_C, ".PDF"), onefile = TRUE)
     if(is.vector(i_spaC)){
       lines(years,i_spaC,lty=1,col='blue')
     }
-    title(main=grp,line=-.6,cex.main=0.9)
+    title(main = paste(i, gsub('_', ' ', grp)),
+          line =-.6,cex.main=0.9)
   }
 dev.off()

@@ -1,5 +1,5 @@
-#Plot-outputs-ecosim-ecospace-and-observed
-# R Code Description
+# Plot-outputs-ecosim-ecospace-and-observed
+Note that functions are called with `source("./functions.R")`, and described below. 
 
 **Naming Conventions**
    * `sim` - Related to Ecosim

@@ -1,3 +1,173 @@
+#Plot-outputs-ecosim-ecospace-and-observed
+# R Code Description
+
+**Naming Conventions**
+   * `sim` - Related to Ecosim
+   * `spa` - Related to Ecospace
+   * `obs` - Related to observed timeseries data, i.e., that Ecosim was fitted to.
+   * `B` - Denotes biomass
+   * `C` - Denotes catch
+
+### Set input and output names
+The user will set these to the output directories from EwE
+```R
+## Input set up ----------------------------------------------------------------
+dir_pdf_out  = "./PDF_plots/"
+ewe_name     = "EwE_Outputs"
+sim_scenario = "sim-spa_01"
+spa_scenario = "spa_01"
+obs_TS_name  = "TS_updated_IB13"
+srt_year     = 1980
+
+## User-defined output parameters ----------------------------------------------
+out_file_notes = ""
+plot_name_xY = paste0("Biomass_scaled_xY_", spa_scenario, out_file_notes)
+plot_name_xM = paste0("Biomass_scaled_xM_", spa_scenario, out_file_notes)
+plot_name_C  = paste0("Catches_", spa_scenario, out_file_notes)
+num_plot_pages = 4 ## Sets number of pages for PDF file
+```
+### Set scaling parameters
+This sets the years to scale. This can be set to scale to the first year (or initial years) to give outputs similiar to Ecosim, or set to the whole time period which normalizes the outputs. 
+```R
+init_years_toscale  = 2016-1980 ## 36. This will scale all outputs to the global average
+init_months_toscale = init_years_toscale * 12
+```
+### Read-in ANNUAL Observed, Ecosim, and Ecospace timeseries
+- The directory names are defined by the input set up, above. 
+- Note that `num_skip_sim` and `num_skip_space` are determined with `f.find_start_line(filename, flag = srt_year)`
+- Functional group names are standardized with `f.standardize_group_names(colnames(spaB_xY))`
+
+### Read-in MONTHLY Observed, Ecosim, and Ecospace timeseries
+- Similar to reading in annual timeseries, although months need to be denoted with `as.Date` objects
+- Observed timeseries are made by making separate data farmes for each list element
+```R
+## Read in "observed" timeseries -----------------------------------------------
+dir_obs = paste0("./", ewe_name, "/", obs_TS_name, ".csv")
+obs.list = f.read_ecosim_timeseries(dir_obs, num_row_header = 4)
+for(i in 1:length(obs.list)){assign(names(obs.list)[i],obs.list[[i]])} #make separate dataframe for each list element
+obsB.head <- merge(obsB.head, fg_df, by = "pool_code", all.x = TRUE)
+obsC.head <- merge(obsC.head, fg_df, by = "pool_code", all.x = TRUE)
+colnames(obsB) = obsB.head$group_name
+colnames(obsC) = obsC.head$group_name
+```
+## **Plotting Biomass**
+Here, biomasses are plotted. PDF readers should be closed before running the PDF creation function.
+   * **Annual Biomass**: Biomass data is scaled, colors for the plot are set, and a plotting function is called.
+   * **Monthly Biomass**: Similarly to the annual data, monthly biomass is scaled and plotted.
+```R
+## -----------------------------------------------------------------------------
+## Plot and compare MONTHLY biomass 
+pdf(paste0(dir_pdf_out, plot_name_xM, ".PDF"), onefile = TRUE)
+  ## Set number of plots per page
+  set.mfrow = f.get_plot_dims(x=num_fg / num_plot_pages, round2=4)
+  par(mfrow=set.mfrow, mar=c(1.2, 2, 1.2, 2))
+  
+  for(i in 1:num_fg){
+    #i=6
+    grp = fg_df$group_name[i]
+    spaB = spaB_xM[,i] 
+    simB = simB_xM[,i] 
+    
+    ## Check to see if observed data is available
+    obsB_scaled=NULL
+    if(i %in% obsB.head$pool_code){
+      obs.idx     = which(obsB.head$pool_code==i)
+      obs_df      = suppressWarnings( ## Suppress warnings thrown when obs not available
+        data.frame(year_series, obsB = as.numeric(obsB[ ,obs.idx]))
+      )
+      obsB_scaled = obs_df$obsB / mean(na.omit(obs_df$obsB)[1:init_years_toscale], na.rm = TRUE)
+      rm(obs_df)
+      rm(obs.idx)
+    }
+    
+    ## Scale to the average of a given timeframe
+    spaB_scaled = spaB / mean(spaB[1:init_months_toscale], na.rm = TRUE)
+    simB_scaled = simB / mean(simB[1:init_months_toscale], na.rm = TRUE)
+    
+    ## Plot colors
+    col_obs = 'black'
+    col_sim = rgb(0.2, 0.7, .1, alpha = 0.8) ## rgb (red, green, blue, alpha)
+    col_spa = rgb(0.1, 0, 1, alpha = 0.6) 
+    
+    ## Call plotting function
+    f.plot_outputs_obs_sim_spa(x = date_series, grp = grp, 
+                               spaB_scaled = spaB_scaled, simB_scaled = simB_scaled, obsB_scaled = obsB_scaled, 
+                               col_spa = col_spa, col_sim = col_sim, col_obs = col_obs,
+                               num_fg = length(fg_names), num_plot_pages = 4, 
+                               sim_lwd = 1, spa_lwd = 1)
+  }
+dev.off()
+```
+
+## **Ecospace Catches**
+- Ecospace catches are read in and processed.
+```R
+## Read-in and prepare Ecospace catches
+spaC_xY = lapply(dir_spa, FUN=function(x)read.csv(paste0(dir_spa, "/Ecospace_Annual_Average_Catch.csv"),skip=32,header=T))
+spaC_xY = lapply(spaC_xY, "[", -1)
+spaC_xY.a = array(unlist(spaC_xY),dim=c(dim(spaC_xY[[1]]),length(spaC_xY)))
+idx.nm = unlist(gregexpr('\\.\\.\\.\\.', names(spaC_xY[[1]])))+4
+spaC_xY.grps = substr(names(spaC_xY[[1]]), idx.nm, 1000)
+spaC_xY.grps = f.standardize_group_names(spaC_xY.grps) ## Correct group names
+spaC_xY.grpnum = as.numeric(fg_df$pool_code[match(spaC_xY.grps,gsub("/","_", fg_df$group_name))])
+print(cbind(spaC_xY.grps,spaC_xY.grpnum))
+spaC_xY.a2 = array(NA,dim=c(dim(spaC_xY.a)[1],length(unique(spaC_xY.grps)),dim(spaC_xY.a)[3]),
+                   dimnames=list(years,sort(unique(spaC_xY.grps)), paste0('run',1:dim(spaC_xY.a)[3])))
+for(i in 1:dim(spaC_xY.a)[3]){
+  #i=1
+  tmp = aggregate(.~spaC_xY.grps, data=as.data.frame(t(spaC_xY.a[,,i])),sum)
+  arr = as.matrix(t(tmp[,-1]))
+  spaC_xY.a2[,,i] = arr
+  rm(tmp,arr)
+}
+```
+- Catches are plotted and saved in a PDF file, handling unique fleets and their corresponding colors.
+```R
+## Plot catches ----------------------------------------------------------------
+pdf(paste0(dir_pdf_out, plot_name_C, ".PDF"), onefile = TRUE)
+  set.mfrow = round(f.get_plot_dims(x = num_catches, round2=2)/2)
+  plots_per_pg = set.mfrow[1] * set.mfrow[2]
+  par(mfrow=set.mfrow, mar=c(1,3,1,1))
+  
+  for(i in 1:num_catches){
+    #i=17
+    if(i %in% seq(1, num_catches, by = plots_per_pg-1)) {
+      plot(0, 0, type='n', xlim=c(0,1), ylim=c(0,1), xaxt='n', yaxt='n', 
+           xlab='', ylab='', bty='n') # Create an empty plot
+      legend('top', legend = fleet_cols$fleet_out, bty = 'n',
+             col=fleet_cols$colors, lwd =3, cex=0.6)
+    }
+    
+    grp.num = obsC.head$pool_code[i]
+    grp = fg_names[grp.num]
+    spaC.idx = grep(grp, c_names, ignore.case = TRUE) ## Pulls all indexes of catching that group
+    i_spaC  = spaC_xY.a2[ , spaC.idx, ]
+    i_obsC = obsC[,i]
+    
+    #scale i_obsC biomass to bestfit (last) iteration
+    q = mean(i_spaC, na.rm=T) / mean(i_obsC,na.rm=T)
+    i_obsC = i_obsC*q
+    
+    ## Get fleet colors
+    i_fleets = colnames(i_spaC)
+    i_fleet_prefix <- unique(sapply(strsplit(i_fleets, "__"), `[`, 1)) ## Extract the prefix from the i_fleets vector
+    matched_colors <- fleet_cols$colors[match(i_fleet_prefix, fleet_cols$fleet_name)] ## # Match the fleet_prefix to fleet_name and get the corresponding color
+    
+    ## Make plot
+    plot(years, i_obsC, pch=16, ylim=c(min(i_obsC,i_spaC,na.rm=T)*0.8, max(i_obsC, i_spaC,na.rm=T)*1.2), 
+         cex=0.8,xlab='Year',ylab='Catch', bty='n')
+    if(is.matrix(i_spaC)){
+      matlines(years, i_spaC, lty=1, col=matched_colors)
+    }
+    lines(years, rowMeans(i_spaC, na.rm = TRUE), lwd = 4, col = 'gray60') ## Plot average
+    if(is.vector(i_spaC)){
+      lines(years,i_spaC,lty=1,col='blue')
+    }
+    title(main = paste(i, gsub('_', ' ', grp)),
+          line =-.6,cex.main=0.9)
+  }
+dev.off()
+```
 
 # functions.R
 R functions developed to assist with reading and processing data from the Ecopath with Ecosim (EwE) software suite. This includes the reading of timeseries data from Ecosim, standardizing functional group names, determining multipanel plot dimensions, and plotting of outputs.

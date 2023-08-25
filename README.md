@@ -1,4 +1,4 @@
-# Plot-outputs-ecosim-ecospace-and-observed
+# Plot-outputs-ecosim-ecospace-and-observed.R
 Note that functions are called with `source("./functions.R")`, and described below. 
 
 **Naming Conventions**

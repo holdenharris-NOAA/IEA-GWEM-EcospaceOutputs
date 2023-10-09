@@ -14,7 +14,7 @@ library(dplyr)
 dir_pdf_out  = "./PDF_plots/"
 ewe_name     = "EwE_Outputs"
 sim_scenario = "sim-spa_01"
-spa_scenario = "spa_01"
+spa_scenario = "spa_02_MOM6-ISIMIP3a"
 obs_TS_name  = "TS_updated_IB13"
 srt_year     = 1980
 
@@ -123,7 +123,8 @@ colnames(obsC) = obsC.head$group_name
 
 ## -----------------------------------------------------------------------------
 ## Plot and compare ANNUAL biomass 
-pdf(paste0(dir_pdf_out, plot_name_xY, ".PDF"), onefile = TRUE)
+(dir_pdf_out_xY <- paste0(dir_pdf_out, plot_name_xY, ".PDF"))
+pdf(dir_pdf_out_xY, onefile = TRUE)
   
   ## Set number of plots per page
   set.mfrow = f.get_plot_dims(x=num_fg / num_plot_pages, round2=4)
@@ -168,7 +169,8 @@ dev.off()
 
 ## -----------------------------------------------------------------------------
 ## Plot and compare MONTHLY biomass 
-pdf(paste0(dir_pdf_out, plot_name_xM, ".PDF"), onefile = TRUE)
+(dir_pdf_out_xM <- paste0(dir_pdf_out, plot_name_xM, ".PDF"))
+pdf(dir_pdf_out_xM, onefile = TRUE)
   ## Set number of plots per page
   set.mfrow = f.get_plot_dims(x=num_fg / num_plot_pages, round2=4)
   par(mfrow=set.mfrow, mar=c(1.2, 2, 1.2, 2))

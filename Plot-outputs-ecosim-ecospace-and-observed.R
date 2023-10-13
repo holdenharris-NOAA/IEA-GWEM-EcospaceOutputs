@@ -14,7 +14,7 @@ library(dplyr)
 dir_pdf_out  = "./PDF_plots/"
 ewe_name     = "EwE_Outputs"
 sim_scenario = "sim-spa_01"
-spa_scenario = "spa_02_MOM6-ISIMIP3a"
+spa_scenario = "spa_03_MOM6-ISIMIP3a_PP-phyc-vint"
 obs_TS_name  = "TS_updated_IB13"
 srt_year     = 1980
 

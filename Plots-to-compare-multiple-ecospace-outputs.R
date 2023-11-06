@@ -48,17 +48,10 @@ simB_xY$year.group = NULL
 simC_xY <- read.csv(paste0(dir_sim, "catch_annual.csv"), skip = num_skip_sim)
 simC_xY$year.group = NULL
 
-#fg_names = f.standardize_group_names(colnames(B_xY))
-
-
-## Make dataframe of functional groups
-
-
 ## Read-in Ecospace annual biomass and catches ---------------------------------
 ls_spaB_xY <- list()
 ls_spaC_xY <- list()
 for (i in 1:length(spa_scenarios)) {
-  i = 2
   dir_spa = paste0("./", ewe_name, "/", spa_scenarios[i], "/")
   filename <- paste0(dir_spa, "Ecospace_Annual_Average_Biomass.csv")
   num_skip_spa <- f.find_start_line(filename, flag = "Year")
@@ -122,68 +115,32 @@ colnames(obsC) = obsC.head$group_name
 
 ## -----------------------------------------------------------------------------
 ## Plot and compare ANNUAL biomass 
+spa_scen_names <- c("01 Base", "02 MODIS-ChlA", "03 MOM6-ChlA", "04 MOM6-Vint")
+
+## Plotting parameters
+col_obs = 'black'
+col_sim = rgb(0.2, 0.7, .1, alpha = 0.9) ## rgb (red, green, blue, alpha)
+col_spa <- colorRampPalette(c("deepskyblue", "blue1", "blue4", "purple4", "darkviolet"))(length(spaB_scaled_ls))
+x = year_series; grp; spaB_scaled=spaB_scaled_ls; simB_scaled; obsB_scaled;
+num_plot_pages = 4; x_break = 5; y_break = 4; x_cex = 0.9; y_cex = 0.9; x_las = 2;
+sim_lty = 1; spa_lty = 1
+sim_lwd = 2; spa_lwd = 1; obs_pch = 16; obs_cex = 0.8;
+main_cex = 0.85; leg_cex = 1; leg_pos = 'topleft';leg_inset = 0.1
+#simB_scaled = spaB_scaled_ls
+
 (dir_pdf_out_xY <- paste0(dir_pdf_out, plot_name_xY, ".PDF"))
 #pdf(dir_pdf_out_xY, onefile = TRUE)
   
   ## Set number of plots per page
-#  set.mfrow = f.get_plot_dims(x=num_fg / num_plot_pages, round2=4)
-#  par(mfrow=set.mfrow, mar=c(1, 2, 1, 2))
-  
-#  for(i in 1:num_fg){
-    i=6
-    grp  = fg_df$group_name[i]
-    
-    extracted_columns <- lapply(ls_spaB_xY, function(df) df[, i]) ## Extract the i column from each data frame in the list
-    
-    grp_spaB_xY = ls_spaB_xY[[,i]]
-    
-    spaB = spaB_xY[,i] 
-    simB = simB_xY[,i] 
-    
-    ## Check to see if observed data is available
-    obsB_scaled=NULL
-    if(i %in% obsB.head$pool_code){
-      obs.idx     = which(obsB.head$pool_code==i)
-      obs_df      = suppressWarnings( ## Suppress warnings thrown when obs not available
-        data.frame(year_series, obsB = as.numeric(obsB[ ,obs.idx]))
-      )
-      obsB_scaled = obs_df$obsB / mean(na.omit(obs_df$obsB)[1:init_years_toscale], na.rm = TRUE)
-      rm(obs_df)
-      rm(obs.idx)
-    }
-    
-    ## Scale to the average of a given timeframe
-    spaB_scaled = spaB / mean(spaB[1:init_years_toscale], na.rm = TRUE)
-    simB_scaled = simB / mean(simB[1:init_years_toscale], na.rm = TRUE)
-    
-    ## Plot colors
-    col_obs = 'black'
-    col_sim = rgb(0.2, 0.7, .1, alpha = 0.9) ## rgb (red, green, blue, alpha)
-    col_spa = rgb(0.1, 0, 1, alpha = 0.8) 
-    
-    ## Call plotting function
-    f.plot_outputs_obs_sim_spa(x = year_series, grp = grp, 
-                               spaB_scaled = spaB_scaled, simB_scaled = simB_scaled, 
-                               obsB_scaled = obsB_scaled, 
-                               col_spa = col_spa, col_sim = col_sim, col_obs = col_obs,
-                               num_fg = length(fg_names), num_plot_pages = 4, 
-                               sim_lwd = 2, spa_lwd = 2)
-  }
-dev.off()    
-
-## -----------------------------------------------------------------------------
-## Plot and compare MONTHLY biomass 
-(dir_pdf_out_xM <- paste0(dir_pdf_out, plot_name_xM, ".PDF"))
-pdf(dir_pdf_out_xM, onefile = TRUE)
-  ## Set number of plots per page
   set.mfrow = f.get_plot_dims(x=num_fg / num_plot_pages, round2=4)
-  par(mfrow=set.mfrow, mar=c(1.2, 2, 1.2, 2))
-  
-  #for(i in 1:num_fg){
-    #i=36
-    grp = fg_df$group_name[i]
-    spaB = spaB_xY[,i] 
+  par(mfrow=set.mfrow, mar=c(1, 2, 1, 2))
+  plots_per_pg = set.mfrow[1] * set.mfrow[2]
+
+ #for(i in 1:num_fg){
+  for(i in 1:19){
+    grp  = fg_df$group_name[i]
     simB = simB_xY[,i] 
+    spaB_ls <- lapply(ls_spaB_xY, function(df) df[, i]) ## Extract the i column from each data frame in the list
     
     ## Check to see if observed data is available
     obsB_scaled=NULL
@@ -198,31 +155,79 @@ pdf(dir_pdf_out_xM, onefile = TRUE)
     }
     
     ## Scale to the average of a given timeframe
-    spaB_scaled = spaB / mean(spaB[1:init_months_toscale], na.rm = TRUE)
-    simB_scaled = simB / mean(simB[1:init_months_toscale], na.rm = TRUE)
+    simB_scaled = simB / mean(simB[1:init_years_toscale], na.rm = TRUE)
+    spaB_scaled_ls = list()
+    for(j in 1:length(spa_scenarios)){
+      spaB               <- spaB_ls[[j]]
+      spaB_scaled        <- spaB / mean(spaB[1:init_years_toscale], na.rm = TRUE)
+      spaB_scaled_ls[[j]] <- spaB_scaled
+    }
     
-    ## Plot colors
-    col_obs = 'black'
-    col_sim = rgb(0.2, 0.7, .1, alpha = 0.8) ## rgb (red, green, blue, alpha)
-    col_spa = rgb(0.1, 0, 1, alpha = 0.6) 
+    ##-------------------------------------------------------------------------------  
+    ## PLOT 
     
-    ## Call plotting function
-    f.plot_outputs_obs_sim_spa(x = date_series, grp = grp, 
-                               spaB_scaled = spaB_scaled, simB_scaled = simB_scaled, obsB_scaled = obsB_scaled, 
-                               col_spa = col_spa, col_sim = col_sim, col_obs = col_obs,
-                               num_fg = length(fg_names), num_plot_pages = 4, 
-                               sim_lwd = 1, spa_lwd = 1)
-  }
+    ## Legend plots -------------------------------------------
+    if(i %in% seq(1, num_fg, by = plots_per_pg-1)) {
+      plot(0, 0, type='n', xlim=c(0,1), ylim=c(0,1), xaxt='n', yaxt='n', 
+           xlab='', ylab='', bty='n') # Create an empty plot
+      legend(leg_pos, inset = 0.1, bg="gray90", box.lty = 0,
+             legend=c('Observed','Ecosim', spa_scen_names),
+             lty = c(NA, sim_lty, rep(spa_lty, length(spaB_scaled_ls))), 
+             lwd = c(NA, sim_lwd, rep(spa_lwd, length(spaB_scaled_ls))),
+             pch=c(obs_pch, NA, rep(NA, length(spaB_scaled_ls))), 
+             col =c(col_obs, col_sim, col_spa), 
+             cex = leg_cex)
+    }
+    
+    ## Data plots -------------------------------------------
+    ## Determine y-axis range and initialize plot
+    min = min(obsB_scaled, simB_scaled, unlist(spaB_scaled_ls), na.rm=T) * 0.8
+    max = max(obsB_scaled, simB_scaled, unlist(spaB_scaled_ls), na.rm=T) * 1.2
+    plot(x, rep("", length(x)), type='b', 
+         ylim = c(min, max), xaxt = 'n', yaxt = 'n',
+         xlab = '', ylab='', bty = 'n')
+    title(main = grp, line=-.6, cex.main = main_cex) ## Add title
+    
+    ## Get years from date series
+    posx = as.POSIXlt(date_series)
+    x_years = unique(posx$year + 1900)
+    end_y = max(x_years)
+    start_y = min(x_years)
+    
+    ## Setup X-axis
+    year_series <- seq(as.Date(paste0(start_y, "-01-01")), as.Date(paste0(end_y,   "-12-01")), by = "1 year")
+    num_breaks_x <- round((end_y - start_y) / x_break) ## Determine x-axis breaks
+    x_ticks <- pretty(x, n = num_breaks_x)
+    xlab = paste0("'", substring(format(x_ticks, "%Y"), nchar(format(x_ticks, "%Y")) - 1))
+    axis(1, at = x_ticks, labels = xlab, cex.axis = x_cex, las = x_las)
+    
+    ## Setup Y-axis
+    y_ticks = pretty(seq(min, max, by = (max-min)/10), n = y_break)
+    axis(2, at = y_ticks, labels = y_ticks, las = 1, cex.axis = y_cex)
+    abline(h=1, col='lightgray')
+    
+    ## Plot outputs: Ecosim (green line), Ecospace (blue line), Observed (black dots)
+    if(length(obsB_scaled)>0) points(year_series, obsB_scaled, pch=16, cex=obs_cex, col = col_obs) ## Plot observed data, if it's present
+    lines(x, simB_scaled, lty=sim_lty, lwd = sim_lwd,  col = col_sim) ## Plot Ecosim
+    if(is.list(spaB_scaled_ls)) {     ## If it's a list, loop through each element and plot
+      for(j in seq_along(spaB_scaled_ls)) {
+        lines(x, spaB_scaled_ls[[j]], lty=spa_lty, lwd=spa_lwd, col=col_spa[j]) # Plot each Ecospace projection. Use the j-th color in the palette for each line.
+      }
+    #} else if(is.list(spaB_scaled_ls)==FALSE) { # If it's not a list, but a vector, plot directly
+    #  lines(x, spaB_scaled, lty=1, lwd=spa_lwd, col=col_spa[1]) # Plot Ecospace
+    }
+}
+
+    
+  
 #dev.off()    
 
-
-
-
-
-
-
-
-
+  
+  
+  
+  
+  
+  
 
 
 

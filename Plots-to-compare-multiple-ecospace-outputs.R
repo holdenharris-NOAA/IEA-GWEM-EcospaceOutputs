@@ -16,11 +16,12 @@ ewe_name     = "EwE_Outputs"
 sim_scenario = "sim-spa_01"
 obs_TS_name  = "TS_updated_IB13"
 srt_year     = 1980
-spa_scenarios = c("spa_00", "spa_01", "spa_02_MOM6-ISIMIP3a", "spa_03_MOM6-ISIMIP3a_PP-phyc-vint")
+spa_scenarios  = c("spa_00", "spa_01", "spa_02_MOM6-ISIMIP3a", "spa_03_MOM6-ISIMIP3a_PP-phyc-vint")
+spa_scen_names = c("01 Base", "02 MODIS-ChlA", "03 MOM6-ChlA", "04 MOM6-Vint")
 
 ## User-defined output parameters ----------------------------------------------
 today_date <- format(Sys.Date(), "%Y-%m-%d")
-out_file_notes = "4spa"
+out_file_notes = "multispa"
 plot_name_xY = paste0("B_scaled_xY_", out_file_notes)
 #plot_name_xM = paste0("B_scaled_xM_", out_file_notes)
 #plot_name_C  = paste0("C_", spa_scenario, out_file_notes)
@@ -115,29 +116,32 @@ colnames(obsC) = obsC.head$group_name
 
 ## -----------------------------------------------------------------------------
 ## Plot and compare ANNUAL biomass 
-spa_scen_names <- c("01 Base", "02 MODIS-ChlA", "03 MOM6-ChlA", "04 MOM6-Vint")
 
 ## Plotting parameters
 col_obs = 'black'
-col_sim = rgb(0.2, 0.7, .1, alpha = 0.9) ## rgb (red, green, blue, alpha)
-col_spa <- colorRampPalette(c("deepskyblue", "blue1", "blue4", "purple4", "darkviolet"))(length(spaB_scaled_ls))
-x = year_series; grp; spaB_scaled=spaB_scaled_ls; simB_scaled; obsB_scaled;
+col_sim = rgb(0.2, 0.7, .1, alpha = 0.6) ## rgb (red, green, blue, alpha)
+#col_spa <- colorRampPalette(c("deepskyblue", "blue1", "blue4", "purple4", "darkviolet"))(length(spaB_scaled_ls))
+#col_spa <- rainbow(length(spaB_scaled_ls))
+col_spa <- c("darkgoldenrod", "indianred2", "steelblue4", "darkorchid4")
+#col_spa <- adjustcolor(col_spa, alpha.f = 1) ## Adjust transparance
+
+x = year_series
 num_plot_pages = 4; x_break = 5; y_break = 4; x_cex = 0.9; y_cex = 0.9; x_las = 2;
 sim_lty = 1; spa_lty = 1
 sim_lwd = 2; spa_lwd = 1; obs_pch = 16; obs_cex = 0.8;
-main_cex = 0.85; leg_cex = 1; leg_pos = 'topleft';leg_inset = 0.1
+main_cex = 0.85; leg_cex = 0.9; leg_pos = 'topleft';leg_inset = 0.1
 #simB_scaled = spaB_scaled_ls
 
 (dir_pdf_out_xY <- paste0(dir_pdf_out, plot_name_xY, ".PDF"))
-#pdf(dir_pdf_out_xY, onefile = TRUE)
+pdf(dir_pdf_out_xY, onefile = TRUE)
   
   ## Set number of plots per page
   set.mfrow = f.get_plot_dims(x=num_fg / num_plot_pages, round2=4)
   par(mfrow=set.mfrow, mar=c(1, 2, 1, 2))
   plots_per_pg = set.mfrow[1] * set.mfrow[2]
 
- #for(i in 1:num_fg){
-  for(i in 1:19){
+ for(i in 1:num_fg){
+#  for(i in 1:19){
     grp  = fg_df$group_name[i]
     simB = simB_xY[,i] 
     spaB_ls <- lapply(ls_spaB_xY, function(df) df[, i]) ## Extract the i column from each data frame in the list
@@ -173,7 +177,7 @@ main_cex = 0.85; leg_cex = 1; leg_pos = 'topleft';leg_inset = 0.1
       legend(leg_pos, inset = 0.1, bg="gray90", box.lty = 0,
              legend=c('Observed','Ecosim', spa_scen_names),
              lty = c(NA, sim_lty, rep(spa_lty, length(spaB_scaled_ls))), 
-             lwd = c(NA, sim_lwd, rep(spa_lwd, length(spaB_scaled_ls))),
+             lwd = c(NA, sim_lwd+1, rep(spa_lwd+1, length(spaB_scaled_ls))),
              pch=c(obs_pch, NA, rep(NA, length(spaB_scaled_ls))), 
              col =c(col_obs, col_sim, col_spa), 
              cex = leg_cex)
@@ -217,95 +221,9 @@ main_cex = 0.85; leg_cex = 1; leg_pos = 'topleft';leg_inset = 0.1
     #  lines(x, spaB_scaled, lty=1, lwd=spa_lwd, col=col_spa[1]) # Plot Ecospace
     }
 }
-
-    
-  
-#dev.off()    
+dev.off()    
 
   
   
   
   
-  
-  
-
-
-
-
-## -----------------------------------------------------------------------------
-##
-## Read-in and prepare Ecospace catches
-
-spaC_xY = lapply(dir_spa, FUN=function(x)read.csv(paste0(dir_spa, "/Ecospace_Annual_Average_Catch.csv"),skip=32,header=T))
-spaC_xY = lapply(spaC_xY, "[", -1)
-spaC_xY.a = array(unlist(spaC_xY),dim=c(dim(spaC_xY[[1]]),length(spaC_xY)))
-idx.nm = unlist(gregexpr('\\.\\.\\.\\.', names(spaC_xY[[1]])))+4
-spaC_xY.grps = substr(names(spaC_xY[[1]]), idx.nm, 1000)
-spaC_xY.grps = f.standardize_group_names(spaC_xY.grps) ## Correct group names
-spaC_xY.grpnum = as.numeric(fg_df$pool_code[match(spaC_xY.grps,gsub("/","_", fg_df$group_name))])
-print(cbind(spaC_xY.grps,spaC_xY.grpnum))
-spaC_xY.a2 = array(NA,dim=c(dim(spaC_xY.a)[1],length(unique(spaC_xY.grps)),dim(spaC_xY.a)[3]),
-                   dimnames=list(years,sort(unique(spaC_xY.grps)), paste0('run',1:dim(spaC_xY.a)[3])))
-for(i in 1:dim(spaC_xY.a)[3]){
-  #i=1
-  tmp = aggregate(.~spaC_xY.grps, data=as.data.frame(t(spaC_xY.a[,,i])),sum)
-  arr = as.matrix(t(tmp[,-1]))
-  spaC_xY.a2[,,i] = arr
-  rm(tmp,arr)
-}
-
-## Get unique fleets
-num_catches = nrow(obsC.head)
-fleets <- unique(sapply(strsplit(colnames(spaC_xY.a2), "__"), `[`, 1)) # Extract the part before "__" and get unique values
-fleet_cols <- data.frame(fleet_name = fleets,
-                         colors = rainbow(length(fleets)))
-fleet_cols = rbind(fleet_cols, c("AVERAGE", "gray60"))
-fleet_cols$fleet_out = gsub('c_',  'REC_', fleet_cols$fleet_name)
-fleet_cols$fleet_out = gsub('mm_', 'COM_', fleet_cols$fleet_out)
-fleet_cols$fleet_out = gsub('_', ' ', fleet_cols$fleet_out)
-c_names <- gsub("__", "_", dimnames(spaC_xY.a2)[[2]])
-
-## Plot catches ----------------------------------------------------------------
-pdf(paste0(dir_pdf_out, plot_name_C, ".PDF"), onefile = TRUE)
-  set.mfrow = round(f.get_plot_dims(x = num_catches, round2=2)/2)
-  plots_per_pg = set.mfrow[1] * set.mfrow[2]
-  par(mfrow=set.mfrow, mar=c(1,3,1,1))
-  
-  for(i in 1:num_catches){
-    #i=17
-    if(i %in% seq(1, num_catches, by = plots_per_pg-1)) {
-      plot(0, 0, type='n', xlim=c(0,1), ylim=c(0,1), xaxt='n', yaxt='n', 
-           xlab='', ylab='', bty='n') # Create an empty plot
-      legend('top', legend = fleet_cols$fleet_out, bty = 'n',
-             col=fleet_cols$colors, lwd =3, cex=0.6)
-    }
-    
-    grp.num = obsC.head$pool_code[i]
-    grp = fg_names[grp.num]
-    spaC.idx = grep(grp, c_names, ignore.case = TRUE) ## Pulls all indexes of catching that group
-    i_spaC  = spaC_xY.a2[ , spaC.idx, ]
-    i_obsC = obsC[,i]
-    
-    #scale i_obsC biomass to bestfit (last) iteration
-    q = mean(i_spaC, na.rm=T) / mean(i_obsC,na.rm=T)
-    i_obsC = i_obsC*q
-    
-    ## Get fleet colors
-    i_fleets = colnames(i_spaC)
-    i_fleet_prefix <- unique(sapply(strsplit(i_fleets, "__"), `[`, 1)) ## Extract the prefix from the i_fleets vector
-    matched_colors <- fleet_cols$colors[match(i_fleet_prefix, fleet_cols$fleet_name)] ## # Match the fleet_prefix to fleet_name and get the corresponding color
-    
-    ## Make plot
-    plot(years, i_obsC, pch=16, ylim=c(min(i_obsC,i_spaC,na.rm=T)*0.8, max(i_obsC, i_spaC,na.rm=T)*1.2), 
-         cex=0.8,xlab='Year',ylab='Catch', bty='n')
-    if(is.matrix(i_spaC)){
-      matlines(years, i_spaC, lty=1, col=matched_colors)
-    }
-    lines(years, rowMeans(i_spaC, na.rm = TRUE), lwd = 4, col = 'gray60') ## Plot average
-    if(is.vector(i_spaC)){
-      lines(years,i_spaC,lty=1,col='blue')
-    }
-    title(main = paste(i, gsub('_', ' ', grp)),
-          line =-.6,cex.main=0.9)
-  }
-dev.off()

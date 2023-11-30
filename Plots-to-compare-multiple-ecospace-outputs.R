@@ -24,9 +24,13 @@ today_date <- format(Sys.Date(), "%Y-%m-%d")
 out_file_notes = "multispa"
 scaling_list = c(1, 5, 10, 36)
 
-for (init in scaling_list){
+## -----------------------------------------------------------------------------
+##
+## Loop through scalers
 
-  ## Set scaling parameters 
+for (init in scaling_list){
+  ## Set scaling parameters
+  #init = 1
   init_years_toscale = init
   (plot_name_xY = paste0("BxY_scaled_", init_years_toscale, "y-", out_file_notes, ".PDF"))
 
@@ -99,7 +103,9 @@ for (init in scaling_list){
   #spaB_xM <- read.csv(paste0(dir_spa, "Ecospace_Average_Biomass.csv"), skip = num_skip_spa, header = TRUE); spaB_xM$TimeStep = NULL
   #rownames(spaB_xM) = rownames(simB_xM) = ym_series
   
-  ## Read in "observed" timeseries -----------------------------------------------
+  ## -----------------------------------------------------------------------------
+  ##
+  ## Read in OBSERVED timeseries -----------------------------------------------
   dir_obs = paste0("./", ewe_name, "/", obs_TS_name, ".csv")
   obs.list = f.read_ecosim_timeseries(dir_obs, num_row_header = 4)
   for(i in 1:length(obs.list)){assign(names(obs.list)[i],obs.list[[i]])} #make separate dataframe for each list element
@@ -110,7 +116,22 @@ for (init in scaling_list){
   colnames(obsB) = obsB.head$group_name
   colnames(obsC) = obsC.head$group_name
   
-  ## -----------------------------------------------------------------------------
+  ## ---------------------------------------------------------------------------
+  ##
+  ## Get weights
+  weights <- read.csv(dir_obs, nrows = 3) ## Read in header from TS file
+  weights <- as.data.frame(t(weights)); rownames(weights) = NULL ## Transpose to long
+  colnames(weights) = c("weight", "pool_code", "type"); weights <- weights[-1, ] ## Make column names the first column
+  weights$type <- as.integer(weights$type)
+  weights$pool_code <- as.integer(weights$pool_code)
+  weights$weight <- as.numeric(weights$weight)
+  weights <- subset(weights, weights$type == 6); weights$type <- NULL
+  
+  ## Merge weights into `fg_df` and set NAs to 1. 
+  fg_weights <- merge(fg_df, weights, by = "pool_code", all.x = TRUE)
+  fg_weights$weight[is.na(fg_weights$weight)] <- 1
+  
+  ## ---------------------------------------------------------------------------
   ##
   ## OBJECTIVE COMPARISON METRICS
   ## Create and run objective functions for multiple Ecospace scenarios
@@ -124,7 +145,7 @@ for (init in scaling_list){
     
     fit_metrics <- data.frame(
       nll_spa_obs=NA, nll_spa_sim=NA, nll_sim_obs=NA, 
-      pbi_spa_obs=NA, pbi_spa_sim=NA, pbi_sim_obs=NA, 
+      #pbi_spa_obs=NA, pbi_spa_sim=NA, pbi_sim_obs=NA, 
       mae_spa_obs=NA, mae_spa_sim=NA, mae_sim_obs=NA)
     
     ## -----------------------------------------------------------------------------
@@ -178,13 +199,13 @@ for (init in scaling_list){
       resids <- comp_df$obs - comp_df$sim
       nll_sim_obs <- -(-length(comp_df$obs)/2 * log(2*pi*var(resids, na.rm=TRUE)) - 1/(2*var(resids, na.rm=TRUE)) * sum(resids^2, na.rm=TRUE))
       
-      ## Calculate percent bias
+      ## Calculate percent bias ------------------------------------------------
       ## Note: This measure of percent bias aggregates all prediction errors, 
       ## both positive and negative, into a single number. This can mask the 
       ## variability of the errors across different observations.
-      pbi_spa_obs <- 100 * (sum(comp_df$spa - comp_df$obs, na.rm=TRUE) / sum(comp_df$obs,na.rm=TRUE))
-      pbi_spa_sim <- 100 * (sum(comp_df$spa - comp_df$sim, na.rm=TRUE) / sum(comp_df$sim,na.rm=TRUE))
-      pbi_sim_obs <- 100 * (sum(comp_df$sim - comp_df$obs, na.rm=TRUE) / sum(comp_df$obs,na.rm=TRUE))
+      #pbi_spa_obs <- 100 * (sum(comp_df$spa - comp_df$obs, na.rm=TRUE) / sum(comp_df$obs,na.rm=TRUE))
+      #pbi_spa_sim <- 100 * (sum(comp_df$spa - comp_df$sim, na.rm=TRUE) / sum(comp_df$sim,na.rm=TRUE))
+      #pbi_sim_obs <- 100 * (sum(comp_df$sim - comp_df$obs, na.rm=TRUE) / sum(comp_df$obs,na.rm=TRUE))
       
       ## Calculate mean absolute error (MAE) ---------------------------------------
       ## Average magnitude of errors between the predictions and observations, 
@@ -200,23 +221,42 @@ for (init in scaling_list){
       
       ## Store calculations
       fit <-  c(nll_spa_obs, nll_spa_sim, nll_sim_obs, 
-                pbi_spa_obs, pbi_spa_sim, pbi_sim_obs, 
+#                pbi_spa_obs, pbi_spa_sim, pbi_sim_obs, 
                 mae_spa_obs, mae_spa_sim, mae_sim_obs); fit
       
       fit_metrics[i,] <- fit
     }
     
-    ## Save information
+    ## Make pretty
     rownames(fit_metrics) = fg_df$group_name
     fit_metrics = round(fit_metrics, 2)
-    fit_sums <- colSums(fit_metrics, na.rm = TRUE)
-    fit_metrics_ls[[j]] = round(fit_metrics, 2)
     
-    spa_fit_sums <- rbind(spa_fit_sums, colSums(fit_metrics, na.rm = TRUE))
+    ## Weighting, summing, and saving ------------------------------------------
+    fit_sums          <- as.data.frame(t(colSums(fit_metrics, na.rm = TRUE)))
+    fit_sums$weighting <- "none"
     
+    ## Incorporate weights via element-wise multiplication
+    weighted_fits <- cbind(fg_weights$weight, fit_metrics * fg_weights$weight)
+    weighted_fit_sums  <- colSums(weighted_fits[,2:ncol(weighted_fits)], na.rm = TRUE)
+    weighted_fit_sums <- as.data.frame(t(weighted_fit_sums))
+    weighted_fit_sums$weighting <- "weighted"
+    
+    ## Square-root weighting
+    sqrt_weighted_fits <- cbind(fg_weights$weight, fit_metrics * sqrt(fg_weights$weight))
+    sqrt_weighted_fit_sums <- colSums(sqrt_weighted_fits[,2:ncol(weighted_fits)], na.rm = TRUE)
+    sqrt_weighted_fit_sums <- as.data.frame(t(sqrt_weighted_fit_sums))
+    sqrt_weighted_fit_sums$weighting <- "root-weighted"
+  
+    ## Same to running list
+    scen_fit_sums <- data.frame(scenario = spa_scen_names[j])
+    scen_fit_sums <- cbind(scen_fit_sums,
+                           rbind(fit_sums, weighted_fit_sums, sqrt_weighted_fit_sums))
+    
+    spa_fit_sums <- rbind(spa_fit_sums, scen_fit_sums)
+    fit_metrics_ls[[j]] = round(weighted_fits, 2)
+    #fit_metrics_ls[[j]] = round(fit_metrics, 2)
   }
-  names(spa_fit_sums) <- colnames(fit_metrics)
-  rownames(spa_fit_sums) <- spa_scen_names
+  
   spa_fit_sums
   
   ## Write out tables ------------------------------------------------------------
@@ -231,13 +271,13 @@ for (init in scaling_list){
   }
   
   ## Write out tables as CSV Files
-  write.csv(spa_fit_sums, file = paste0(folder_path, "/Ecospace-fits-summed.csv"), row.names = TRUE)
+  write.csv(spa_fit_sums, file = paste0(folder_path, "/Ecospace-fits-summed-" , init_years_toscale, "y.csv"), row.names = TRUE)
   
-  for (j in 1:length(fit_metrics_ls)){
-    write.csv(fit_metrics_ls[[j]], 
-              file = paste0(folder_path, "/Fit metrics - ", spa_scen_names[j], ".csv"),
-              row.names = TRUE)
-  }
+#  for (j in 1:length(fit_metrics_ls)){
+#    write.csv(fit_metrics_ls[[j]], 
+#              file = paste0(folder_path, "/Fit metrics - ", spa_scen_names[j], ".csv"),
+#              row.names = TRUE)
+#  }
   
   ## Also, write out as an Excel file with each scenario as a different Tab
   library(openxlsx)
@@ -251,19 +291,16 @@ for (init in scaling_list){
   for (j in seq_along(fit_metrics_ls)) { # Loop through the list of data frames and add each as a new sheet
     sheet_name <- spa_scen_names[j]   # Create a sheet name based on the names in spa_scen_names
     addWorksheet(wb, sheet_name) # Add a sheet to the workbook with the data frame
-    writeData(wb, sheet_name, replace_NaN(fit_metrics_ls[[j]]), na.string = "NA")
+    writeData(wb, sheet_name, replace_NaN(fit_metrics_ls[[j]]), na.string = "NA", rowNames = TRUE)
   }
   
-  saveWorkbook(wb, paste0(folder_path, "/Fit_Metrics.xlsx"), overwrite = TRUE) # Save the workbook as an Excel file
+  saveWorkbook(wb, paste0(folder_path, "/Fit_Metrics_", init_years_toscale, "y.xlsx"), overwrite = TRUE) # Save the workbook as an Excel file
   
   ## -----------------------------------------------------------------------------
   ##
   ## Plot biomasses
   ## Note: Make sure PDF readers are closed before running pdf()
-  
-  ## -----------------------------------------------------------------------------
-  ## Plot and compare ANNUAL biomass 
-  
+
   ## Plotting parameters
   col_obs = 'black'
   col_sim = rgb(0.2, 0.7, .1, alpha = 0.6) ## rgb (red, green, blue, alpha)

@@ -125,7 +125,7 @@ for (init in scaling_list){
   weights$type <- as.integer(weights$type)
   weights$pool_code <- as.integer(weights$pool_code)
   weights$weight <- as.numeric(weights$weight)
-  weights <- subset(weights, weights$type == 6); weights$type <- NULL
+  weights <- subset(weights, weights$type == 0); weights$type <- NULL
   
   ## Merge weights into `fg_df` and set NAs to 1. 
   fg_weights <- merge(fg_df, weights, by = "pool_code", all.x = TRUE)

@@ -15,13 +15,11 @@ ewe_name     = "EwE_Outputs"
 sim_scenario = "sim-spa_01"
 obs_TS_name  = "TS_updated_IB13"
 srt_year     = 1980
-#spa_scenarios  = c("spa_ST00_base-no-drivers", "spa_ST01a_surf-sal", 
-#                   "spa_ST01b_temp", "spa_ST01c_PP-MODIS")
-#spa_scen_names = c("01 No drivers",  "02 Salinity", 
-#                   "03 Temperature", "04 PP (MODIS)")
+spa_scenarios  = c("spa_ST00_base-no-drivers", "spa_ST01a_surf-sal", 
+                   "spa_ST01b_temp", "spa_ST01c_PP-MODIS")
+spa_scen_names = c("01 No drivers",  "02 Salinity", 
+                   "03 Temperature", "04 PP (MODIS)")
 
-spa_scenarios  = c("spa_ST00_base-no-drivers", "spa_ST01a_surf-sal")
-spa_scen_names = c("No drivers", "Salinity (only)")
 
 ## User-defined output parameters ----------------------------------------------
 num_plot_pages = 4 ## Sets number of pages for PDF file
@@ -272,31 +270,36 @@ for (init in scaling_list){
   }; spa_fit_sums
   
   ## Extract of Ecosim fits and appendto make one table -------------
-  spa_fit_sums_updated <- spa_fit_sums %>%
-    ## Append Ecosim as a new scenario
-    bind_rows(
-      spa_fit_sums %>%
-        select(weighting, nll_sim_obs, mae_sim_obs) %>%
-        distinct() %>%
-        mutate(scenario = "Ecosim",
-               nll_spa_obs = nll_sim_obs,  # Directly assign these values
-               mae_spa_obs = mae_sim_obs,
-               nll_spa_sim = NA,
-               mae_spa_sim = NA) %>%
-        select(scenario, everything()) %>%
-        select(-nll_sim_obs, -mae_sim_obs)  # Remove columns here to avoid later step
-    ) %>%
-    arrange(weighting, scenario) %>%
-    mutate_if(is.numeric, round); spa_fit_sums_updated
-  
+  ## Remove Ecosim columns and add them as scenarios for final table -----------
+
+  ## Extract the Ecosim fits
+    ecosim_df <- spa_fit_sums %>% 
+       select(weighting, nll_sim_obs, mae_sim_obs) %>%
+       distinct() %>% # Ensure we select distinct/unique rows
+       mutate(scenario = "00 Ecosim", # Add the scenario column with "Ecosim"
+                          nll_spa_obs = NA,  # Set other columns to NA
+                          nll_spa_sim = NA,
+                          mae_spa_obs = NA,
+                          mae_spa_sim = NA) %>%
+      select(scenario, everything()) # Ensure 'scenario' is the first column
+   
+  ## Append, arrange by weighting, and round
+     spa_fit_sums_expanded <- 
+       rbind(spa_fit_sums, ecosim_df) %>%
+       arrange(weighting, scenario) %>%
+       mutate_if(is.numeric, round) ## Round to whole number
+   
+  ## Move "Ecosim" values and remove unwanted columns
+     spa_fit_sums_updated <- spa_fit_sums_expanded %>%
+       mutate(nll_spa_obs = if_else(scenario == "00 Ecosim", nll_sim_obs, nll_spa_obs), # Move values for Ecosim
+                         mae_spa_obs = if_else(scenario == "00 Ecosim", mae_sim_obs, mae_spa_obs)) %>%
+       select(-nll_sim_obs, -mae_sim_obs) %>% # Remove the columns
+       arrange(weighting, scenario) 
+     
+     spa_fit_sums_updated
+
   ## Write out tables as CSV Files
   write.csv(spa_fit_sums_updated, file = paste0(dir_tab_out, "Ecospace-fits-summed-" , init_years_toscale, "y.csv"), row.names = FALSE)
-  
-#  for (j in 1:length(fit_metrics_ls)){
-#    write.csv(fit_metrics_ls[[j]], 
-#              file = paste0(folder_path, "/Fit metrics - ", spa_scen_names[j], ".csv"),
-#              row.names = TRUE)
-#  }
   
   ## Also, write out as an Excel file with each scenario as a different Tab
   library(openxlsx)

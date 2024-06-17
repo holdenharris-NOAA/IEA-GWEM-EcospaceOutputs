@@ -1,5 +1,3 @@
-rm(list=ls());graphics.off();rm(.SavedPlots);gc();windows(record=T)
-
 ##-------------------------------------------------------------------------------  
 ## READ ECOSIM TIMESERIES FILE
 ##-------------------------------------------------------------------------------
@@ -122,8 +120,8 @@ f.plot_outputs_obs_sim_spa <- function(x, grp, spaB_scaled, simB_scaled, obsB_sc
   
   ## Plot outputs: Ecosim (green line), Ecospace (blue line), Observed (black dots)
   lines(x, simB_scaled, lty=1, lwd = sim_lwd,  col = col_sim) ## Plot Ecosim
-  if(is.vector(spaB)) lines(x, spaB_scaled, lty = 1, lwd = spa_lwd, col = col_spa) ## Plot Ecospace
-  if(is.matrix(spaB)) matlines(x, spaB_scaled, lty=1, lwd = spa_lwd, col=c(rep('lightblue', ncol(spaB)-1), col_spa)) ## Plot multiple Ecospace projections, if available.
+  if(is.vector(spaB_scaled)) lines(x, spaB_scaled, lty = 1, lwd = spa_lwd, col = col_spa) ## Plot Ecospace
+  if(is.list(spaB_scaled)) matlines(x, spaB_scaled, lty=1, lwd = spa_lwd, col=c(rep('lightblue', ncol(4)-1), col_spa)) ## Plot multiple Ecospace projections, if available.
   if(length(obsB_scaled)>0) points(year_series, obsB_scaled, pch=16, cex=0.6, col = col_obs) ## Plot observed data, if it's present
   
   ## Add legend and title
@@ -135,6 +133,77 @@ f.plot_outputs_obs_sim_spa <- function(x, grp, spaB_scaled, simB_scaled, obsB_sc
            col =c(col_obs, col_sim, col_spa), cex = leg_cex)
   }
 }
+
+
+##-------------------------------------------------------------------------------
+
+## Note that X must be a Date object
+f.plot_multi_spa <- function(x, grp, spaB_scaled, simB_scaled, obsB_scaled,
+                                       col_spa = 'blue', col_sim = 'green', col_obs = 'black',
+                                       num_fg  = 78, num_plot_pages = 4,
+                                       x_break = 5, y_break = 4, x_cex = 0.9, y_cex = 0.9, x_las = 2,
+                                       sim_lwd = 1, spa_lwd = 1, obs_pch = 16, obs_cex = 0.6,
+                                       main_cex = 0.85, leg_cex = 0.7, leg_pos = 'topleft',
+                                       leg_inset = 0.1){
+  
+  #x = year_series; grp; spaB_scaled=spaB_scaled_ls; simB_scaled; obsB_scaled;
+  #col_spa = 'blue'; col_sim = 'green'; col_obs = 'black';
+  #num_fg  = 78; num_plot_pages = 4;
+  #x_break = 5; y_break = 4; x_cex = 0.9; y_cex = 0.9; x_las = 2;
+  #sim_lwd = 1; spa_lwd = 1; obs_pch = 16; obs_cex = 0.6;
+  #main_cex = 0.85; leg_cex = 0.7; leg_pos = 'topleft';leg_inset = 0.1
+  
+  ## Determine y-axis range and initialize plot
+  min = min(obsB_scaled, simB_scaled, unlist(spaB_scaled), na.rm=T) * 0.8
+  max = max(obsB_scaled, simB_scaled, unlist(spaB_scaled), na.rm=T) * 1.2
+  plot(x, rep("", length(x)), type='b', 
+       ylim = c(min, max), xaxt = 'n', yaxt = 'n',
+       xlab = '', ylab='', bty = 'n')
+  
+  ## Get years from date series
+  posx = as.POSIXlt(date_series)
+  x_years = unique(posx$year + 1900)
+  end_y = max(x_years)
+  start_y = min(x_years)
+  
+  ## Setup X-axis
+  year_series <- seq(as.Date(paste0(start_y, "-01-01")), as.Date(paste0(end_y,   "-12-01")), by = "1 year")
+  num_breaks_x <- round((end_y - start_y) / x_break) ## Determine x-axis breaks
+  x_ticks <- pretty(x, n = num_breaks_x)
+  xlab = paste0("'", substring(format(x_ticks, "%Y"), nchar(format(x_ticks, "%Y")) - 1))
+  axis(1, at = x_ticks, labels = xlab, cex.axis = x_cex, las = x_las)
+  
+  ## Setup Y-axis
+  y_ticks = pretty(seq(min, max, by = (max-min)/10), n = y_break)
+  axis(2, at = y_ticks, labels = y_ticks, las = 1, cex.axis = y_cex)
+  abline(h=1, col='lightgray')
+  
+  ## Plot outputs: Ecosim (green line), Ecospace (blue line), Observed (black dots)
+  lines(x, simB_scaled, lty=1, lwd = sim_lwd,  col = col_sim) ## Plot Ecosim
+  if(length(obsB_scaled)>0) points(year_series, obsB_scaled, pch=16, cex=0.6, col = col_obs) ## Plot observed data, if it's present
+  if(is.list(spaB_scaled)==FALSE) lines(x, spaB_scaled, lty = 1, lwd = spa_lwd, col = col_spa) ## Plot Ecospace
+  if(is.list(spaB_scaled)==TRUE) {     ## If it's a list, loop through each element and plot
+    for(j in seq_along(spaB_scaled)) {
+      # If you want different colors for each list element, you can create a color vector
+      # e.g., col_vector <- rainbow(length(spaB_scaled))
+      # Then use col=col_vector[i] inside the lines() function
+      lines(x, spaB_scaled[[j]], lty=1, lwd=spa_lwd, col=col_spa) # Plot each Ecospace projection
+    }
+  } else if(is.vector(spaB_scaled)) {
+    # If it's not a list, but a vector, plot directly
+    lines(x, spaB_scaled, lty=1, lwd=spa_lwd, col=col_spa) # Plot Ecospace
+  }
+  
+  ## Add legend and title
+  title(main = grp, line=-.6, cex.main = main_cex)
+  if(i %in% seq(1, num_fg, by = ceiling(num_fg / num_plot_pages))) {
+    legend(leg_pos, inset = 0.1, bg="gray90", box.lty = 0,
+           legend=c('Observed','Ecosim','Ecospace'),
+           lty =c(NA, 1, 1), lwd = c(NA, sim_lwd, spa_lwd), pch=c(obs_pch, NA, NA), 
+           col =c(col_obs, col_sim, col_spa), cex = leg_cex)
+  }
+}
+
 
 ## Test
 #f.plot_outputs_obs_sim_spa(x = year_series, grp = grp, 

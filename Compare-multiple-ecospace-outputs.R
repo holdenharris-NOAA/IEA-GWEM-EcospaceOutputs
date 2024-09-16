@@ -16,24 +16,26 @@ sim_scenario = "sim-spa_01"
 obs_TS_name  = "TS_updated_IB13"
 srt_year     = 1980
 spa_scenarios  = c("spa_ST00_base-no-drivers", "spa_ST01a_surf-sal", 
-                   "spa_ST01b_temp", "spa_ST01c_PP-MODIS")
+                   "spa_ST01b_temp", "spa_ST01c_PP-MODIS", 
+                   "spa_ST01c_PP-MOM6")
 spa_scen_names = c("01 No drivers",  "02 Salinity", 
-                   "03 Temperature", "04 PP (MODIS)")
+                   "03 Temperature", "04 PP (MODIS)",
+                   "05 PP (MOM6)")
 
 
 ## User-defined output parameters ----------------------------------------------
 num_plot_pages = 4 ## Sets number of pages for PDF file
 today_date <- format(Sys.Date(), "%Y-%m-%d")
 out_file_notes = "Exp1"
-scaling_list = c(1, 6, 12)
+scaling_list = c(1, 6, 12) ## Set the number of years to average outputs for scaling
 
 ## Set up output folders -------------------------------------------------------
-dir_out <- "./Scenario_comps/Test_EnvDrivers/"
+dir_out <- "./Scenario_comps/Test_EnvDrivers/" ## Folder where outputs will be stored
 if (!dir.exists(dir_out)) dir.create(dir_out, recursive = TRUE) ## Create the folder if it doesn't exist
 
 ## Plot output names
-dir_pdf_out  = paste0(dir_out, "PDF_plots/")
-dir_tab_out  = paste0(dir_out, "Fit_tables/")
+dir_pdf_out  = paste0(dir_out, "PDF_plots/")  ## Folder for plots
+dir_tab_out  = paste0(dir_out, "Fit_tables/") ## Folder for tables with fit metrics
 if (!dir.exists(dir_pdf_out)) dir.create(dir_pdf_out, recursive = TRUE) ## Create the folder if it doesn't exist
 if (!dir.exists(dir_tab_out)) dir.create(dir_tab_out, recursive = TRUE) ## Create the folder if it doesn't exist
 
@@ -326,7 +328,7 @@ for (init in scaling_list){
   ## Plotting parameters
   col_obs = 'black'
   col_sim = rgb(0.2, 0.7, .1, alpha = 0.6) ## rgb (red, green, blue, alpha)
-  col_spa <- c("darkgoldenrod", "indianred2", "steelblue4", "darkorchid4")
+  col_spa <- c("darkgoldenrod", "indianred2", "steelblue4", "darkorchid4", "darkgreen")
   #col_spa <- adjustcolor(col_spa, alpha.f = 1) ## Adjust transparancy
   
   x = year_series

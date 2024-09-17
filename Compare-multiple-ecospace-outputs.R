@@ -45,7 +45,6 @@ if (!dir.exists(dir_tab_out)) dir.create(dir_tab_out, recursive = TRUE) ## Creat
 
 for (init in scaling_list){
   ## Set scaling parameters
-  #init = 1
   init_years_toscale = init
   folder_name <- paste0(dir_tab_out, "Scaled_", init_years_toscale, "y") ## Folder name based on `init_years_toscale`
   
@@ -198,7 +197,7 @@ for (init in scaling_list){
       } else obsB_scaled=rep(NA, length(simB))  
       
       ## Create data frame to compare observed, Ecosim, and Ecospace
-      comp_df <- data.frame(obs = obsB_scaled, sim = simB_scaled, spa = spaB_scaled)
+      comp_df <- data.frame(obs = obsB, sim = simB, spa = spaB)
       
       ## Calculate log-likelihood ------------------------------------------------
       ## Calculate log-likelihood for spa vs obs
@@ -234,9 +233,9 @@ for (init in scaling_list){
       rmse_sim_obs <- sqrt(mean((comp_df$sim - comp_df$obs)^2, na.rm = TRUE))
       
       ## Store calculations
-      fit <-  c(nll_spa_obs, nll_spa_sim, nll_sim_obs, 
-#                pbi_spa_obs, pbi_spa_sim, pbi_sim_obs, 
-                mae_spa_obs, mae_spa_sim, mae_sim_obs); fit
+      fit <-  c(nll_spa_obs, nll_spa_sim, nll_sim_obs,         ## NLL
+#                pbi_spa_obs, pbi_spa_sim, pbi_sim_obs,        ## Percent bias
+                mae_spa_obs, mae_spa_sim, mae_sim_obs); fit    ## Mean avg error
       
       fit_metrics[i,] <- fit
     }
@@ -271,7 +270,7 @@ for (init in scaling_list){
     #fit_metrics_ls[[j]] = round(fit_metrics, 2)
   }; spa_fit_sums
   
-  ## Extract of Ecosim fits and appendto make one table -------------
+  ## Extract of Ecosim fits and append to make one table -------------
   ## Remove Ecosim columns and add them as scenarios for final table -----------
 
   ## Extract the Ecosim fits

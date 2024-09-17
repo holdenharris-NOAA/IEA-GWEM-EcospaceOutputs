@@ -27,7 +27,7 @@ spa_scen_names = c("01 No drivers",  "02 Salinity",
 num_plot_pages = 4 ## Sets number of pages for PDF file
 today_date <- format(Sys.Date(), "%Y-%m-%d")
 out_file_notes = "Exp1"
-scaling_list = c(1, 6, 12) ## Set the number of years to average outputs for scaling
+scaling_list = c(1) ## Set the number of years to average outputs for scaling
 
 ## Set up output folders -------------------------------------------------------
 dir_out <- "./Scenario_comps/Test_EnvDrivers/" ## Folder where outputs will be stored
@@ -158,7 +158,7 @@ for (init in scaling_list){
   for(j in 1:length(spa_scenarios)){
     
     fit_metrics <- data.frame(
-      nll_spa_obs=NA, nll_spa_sim=NA, nll_sim_obs=NA, 
+      ssr_spa_obs=NA, ssr_spa_sim=NA, ssr_sim_obs=NA, 
       #pbi_spa_obs=NA, pbi_spa_sim=NA, pbi_sim_obs=NA, 
       mae_spa_obs=NA, mae_spa_sim=NA, mae_sim_obs=NA)
     
@@ -201,30 +201,31 @@ for (init in scaling_list){
         obsB_i      = rep(NA, length(simB)) 
       }
         
-      
       ## Create data frame to compare observed, Ecosim, and Ecospace
+      ##
       comp_df <- data.frame(obs = obsB_i, sim = simB, spa = spaB)
       
-      ## Calculate log-likelihood ------------------------------------------------
-      ## Calculate log-likelihood for spa vs obs
-      resids <- comp_df$obs - comp_df$spa
-      nll_spa_obs <- -(-length(comp_df$obs)/2 * log(2*pi*var(resids, na.rm=TRUE)) - 1/(2*var(resids, na.rm=TRUE)) * sum(resids^2, na.rm=TRUE))
+      ## Calculate raw sum of squared residuals (SSR) ------------------------------
+      ## commonly used metric for evaluating the goodness of fit in many models, 
+      ## especially in cases where we're not specifically concerned with the statistical properties 
+      ## of the residuals (like in NLL, which assumes normally distributed errors).
+      raw_ssr_spa_obs <- sum((comp_df$obs - comp_df$spa)^2, na.rm = TRUE) ## SSR for spa vs obs
+      raw_ssr_spa_sim <- sum((comp_df$sim - comp_df$spa)^2, na.rm = TRUE) ## SSR for spa vs sim
+      raw_ssr_sim_obs <- sum((comp_df$obs - comp_df$sim)^2, na.rm = TRUE) ## SSR for sim vs obs
       
-      ## Calculate log-likelihood for spa vs sim
-      resids <- comp_df$sim - comp_df$spa
-      nll_spa_sim <- -(-length(comp_df$sim)/2 * log(2*pi*var(resids, na.rm=TRUE)) - 1/(2*var(resids, na.rm=TRUE)) * sum(resids^2, na.rm=TRUE))
-      
-      ## Calculate log-likelihood for sim vs obs
-      resids <- comp_df$obs - comp_df$sim
-      nll_sim_obs <- -(-length(comp_df$obs)/2 * log(2*pi*var(resids, na.rm=TRUE)) - 1/(2*var(resids, na.rm=TRUE)) * sum(resids^2, na.rm=TRUE))
+      ## SSR for log biomasses
+      ## This is similiar to how goodness of fit is calculated in Ecosim
+      ssr_spa_obs <- sum((log(comp_df$obs + 1) - log(comp_df$spa + 1))^2, na.rm = TRUE) ## SSR for log(obs + 1) vs log(spa + 1)
+      ssr_spa_sim <- sum((log(comp_df$sim + 1) - log(comp_df$spa + 1))^2, na.rm = TRUE) ## SSR for log(sim + 1) vs log(spa + 1)
+      ssr_sim_obs <- sum((log(comp_df$obs + 1) - log(comp_df$sim + 1))^2, na.rm = TRUE) ## SSR for log(obs + 1) vs log(sim + 1)
       
       ## Calculate percent bias ------------------------------------------------
       ## Note: This measure of percent bias aggregates all prediction errors, 
-      ## both positive and negative, into a single number. This can mask the 
+      ## both positive and negative, into a single number, which may mask the 
       ## variability of the errors across different observations.
-      #pbi_spa_obs <- 100 * (sum(comp_df$spa - comp_df$obs, na.rm=TRUE) / sum(comp_df$obs,na.rm=TRUE))
-      #pbi_spa_sim <- 100 * (sum(comp_df$spa - comp_df$sim, na.rm=TRUE) / sum(comp_df$sim,na.rm=TRUE))
-      #pbi_sim_obs <- 100 * (sum(comp_df$sim - comp_df$obs, na.rm=TRUE) / sum(comp_df$obs,na.rm=TRUE))
+      pbi_spa_obs <- 100 * (sum(comp_df$spa - comp_df$obs, na.rm=TRUE) / sum(comp_df$obs,na.rm=TRUE))
+      pbi_spa_sim <- 100 * (sum(comp_df$spa - comp_df$sim, na.rm=TRUE) / sum(comp_df$sim,na.rm=TRUE))
+      pbi_sim_obs <- 100 * (sum(comp_df$sim - comp_df$obs, na.rm=TRUE) / sum(comp_df$obs,na.rm=TRUE))
       
       ## Calculate mean absolute error (MAE) ---------------------------------------
       ## Average magnitude of errors between the predictions and observations, 
@@ -239,7 +240,7 @@ for (init in scaling_list){
       rmse_sim_obs <- sqrt(mean((comp_df$sim - comp_df$obs)^2, na.rm = TRUE))
       
       ## Store calculations
-      fit <-  c(nll_spa_obs, nll_spa_sim, nll_sim_obs,         ## NLL
+      fit <-  c(ssr_spa_obs, ssr_spa_sim, ssr_sim_obs,         ## NLL
 #                pbi_spa_obs, pbi_spa_sim, pbi_sim_obs,        ## Percent bias
                 mae_spa_obs, mae_spa_sim, mae_sim_obs); fit    ## Mean avg error
       
@@ -281,11 +282,11 @@ for (init in scaling_list){
 
   ## Extract the Ecosim fits
     ecosim_df <- spa_fit_sums %>% 
-       select(weighting, nll_sim_obs, mae_sim_obs) %>%
+       select(weighting, ssr_sim_obs, mae_sim_obs) %>%
        distinct() %>% # Ensure we select distinct/unique rows
        mutate(scenario = "00 Ecosim", # Add the scenario column with "Ecosim"
-                          nll_spa_obs = NA,  # Set other columns to NA
-                          nll_spa_sim = NA,
+                          ssr_spa_obs = NA,  # Set other columns to NA
+                          ssr_spa_sim = NA,
                           mae_spa_obs = NA,
                           mae_spa_sim = NA) %>%
       select(scenario, everything()) # Ensure 'scenario' is the first column
@@ -298,9 +299,9 @@ for (init in scaling_list){
    
   ## Move "Ecosim" values and remove unwanted columns
      spa_fit_sums_updated <- spa_fit_sums_expanded %>%
-       mutate(nll_spa_obs = if_else(scenario == "00 Ecosim", nll_sim_obs, nll_spa_obs), # Move values for Ecosim
+       mutate(ssr_spa_obs = if_else(scenario == "00 Ecosim", ssr_sim_obs, ssr_spa_obs), # Move values for Ecosim
                          mae_spa_obs = if_else(scenario == "00 Ecosim", mae_sim_obs, mae_spa_obs)) %>%
-       select(-nll_sim_obs, -mae_sim_obs) %>% # Remove the columns
+       select(-ssr_sim_obs, -mae_sim_obs) %>% # Remove the columns
        arrange(weighting, scenario) 
      
      spa_fit_sums_updated

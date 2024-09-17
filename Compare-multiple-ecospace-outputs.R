@@ -154,6 +154,7 @@ for (init in scaling_list){
   spa_fit_sums = data.frame()
   
   ## Loop through each Ecospace scenario ------------------------------------------
+  ##
   for(j in 1:length(spa_scenarios)){
     
     fit_metrics <- data.frame(
@@ -194,10 +195,15 @@ for (init in scaling_list){
                  years_to_scale <- init_years_toscale)
         mean_init_years = mean(non_na_obsB[1:years_to_scale]) # Calculate the mean of the first 'init_years_toscale' non-NA values
         obsB_scaled = obs_df$obsB / mean_init_years # Scale the entire obs_df$obsB by this mean
-      } else obsB_scaled=rep(NA, length(simB))  
+        obsB_i      = obs_df$obsB
+      } else {  ## Make NAs if there is no observed data     
+        obsB_scaled = rep(NA, length(simB))
+        obsB_i      = rep(NA, length(simB)) 
+      }
+        
       
       ## Create data frame to compare observed, Ecosim, and Ecospace
-      comp_df <- data.frame(obs = obsB, sim = simB, spa = spaB)
+      comp_df <- data.frame(obs = obsB_i, sim = simB, spa = spaB)
       
       ## Calculate log-likelihood ------------------------------------------------
       ## Calculate log-likelihood for spa vs obs

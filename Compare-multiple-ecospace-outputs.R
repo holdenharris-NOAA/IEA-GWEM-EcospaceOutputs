@@ -26,30 +26,23 @@ spa_scen_names = c("01 No drivers",  "02 Salinity",
 ## User-defined output parameters ----------------------------------------------
 num_plot_pages = 4 ## Sets number of pages for PDF file
 today_date <- format(Sys.Date(), "%Y-%m-%d")
-out_file_notes = "Exp1"
-scaling_list = c(1) ## Set the number of years to average outputs for scaling
+out_file_notes = "test-STEdrivers"
+init_years_toscale = 6 ## In plotting, this sets the "1 line" to the average of this number of years
 
 ## Set up output folders -------------------------------------------------------
 dir_out <- "./Scenario_comps/Test_EnvDrivers/" ## Folder where outputs will be stored
 if (!dir.exists(dir_out)) dir.create(dir_out, recursive = TRUE) ## Create the folder if it doesn't exist
 
 ## Plot output names
-dir_pdf_out  = paste0(dir_out, "PDF_plots/")  ## Folder for plots
-dir_tab_out  = paste0(dir_out, "Fit_tables/") ## Folder for tables with fit metrics
+dir_pdf_out  = paste0(dir_out)  ## Folder for plots
+dir_tab_out  = paste0(dir_out) ## Folder for tables with fit metrics
 if (!dir.exists(dir_pdf_out)) dir.create(dir_pdf_out, recursive = TRUE) ## Create the folder if it doesn't exist
 if (!dir.exists(dir_tab_out)) dir.create(dir_tab_out, recursive = TRUE) ## Create the folder if it doesn't exist
 
-## -----------------------------------------------------------------------------
-##
-## Loop through scalers
+folder_name <- paste0(dir_tab_out, "Scaled_", init_years_toscale, "y") ## Folder name based on `init_years_toscale`
+(plot_name_xY = paste0("BxY_scaled_", init_years_toscale, "y-", out_file_notes, ".PDF"))
+pdf_file_name= paste0(dir_pdf_out, plot_name_xY)
 
-for (init in scaling_list){
-  ## Set scaling parameters
-  init_years_toscale = init
-  folder_name <- paste0(dir_tab_out, "Scaled_", init_years_toscale, "y") ## Folder name based on `init_years_toscale`
-  
-  (plot_name_xY = paste0("BxY_scaled_", init_years_toscale, "y-", out_file_notes, ".PDF"))
-  pdf_file_name= paste0(dir_pdf_out, plot_name_xY)
 
   ## -----------------------------------------------------------------------------
   ##
@@ -307,7 +300,7 @@ for (init in scaling_list){
      spa_fit_sums_updated
 
   ## Write out tables as CSV Files
-  write.csv(spa_fit_sums_updated, file = paste0(dir_tab_out, "Ecospace-fits-summed-" , init_years_toscale, "y.csv"), row.names = FALSE)
+  write.csv(spa_fit_sums_updated, file = paste0(dir_tab_out, "Ecospace-fits-summed-" , out_file_notes, ".csv"), row.names = FALSE)
   
   ## Also, write out as an Excel file with each scenario as a different Tab
   library(openxlsx)
@@ -324,7 +317,7 @@ for (init in scaling_list){
     writeData(wb, sheet_name, replace_NaN(fit_metrics_ls[[j]]), na.string = "NA", rowNames = TRUE)
   }
   
-  saveWorkbook(wb, paste0(dir_tab_out, "Fit_Metrics_", init_years_toscale, "y.xlsx"), overwrite = TRUE) # Save the workbook as an Excel file
+  saveWorkbook(wb, paste0(dir_tab_out, "Fit_metrics_", out_file_notes, ".xlsx"), overwrite = TRUE) # Save the workbook as an Excel file
   
   ## -----------------------------------------------------------------------------
   ##
@@ -436,5 +429,3 @@ for (init in scaling_list){
     }
   }
   dev.off()    
-  
-}

@@ -45,7 +45,6 @@ pdf_file_name_xY = paste0(dir_pdf_out, plot_name_xY)
 pdf_file_name_xM = paste0(dir_pdf_out, plot_name_xM)
 
 
-
   ## -----------------------------------------------------------------------------
   ##
   ## Read-in ANNUAL Observed, Ecosim, and Ecospace TS
@@ -73,7 +72,7 @@ pdf_file_name_xM = paste0(dir_pdf_out, plot_name_xM)
   ## Read in Ecosim monthly biomasses
   simB_xM <- read.csv(paste0(dir_sim, "biomass_monthly.csv"), skip = num_skip_sim); simB_xM$timestep.group = NULL
   simC_xM <- read.csv(paste0(dir_sim, "catch_monthly.csv"), skip = num_skip_sim); simC_xM$timestep.group = NULL
-  rownames(spaB_xM) = rownames(simB_xM) = ym_series
+  rownames(simB_xM) = ym_series
   
   ## -----------------------------------------------------------------------------
   ##
@@ -364,9 +363,6 @@ pdf_file_name_xM = paste0(dir_pdf_out, plot_name_xM)
   plots_per_pg = set.mfrow[1] * set.mfrow[2]
   
   
-  
-  
-  
   ## -----------------------------------------------------------------------------
   ##
   ## Plot by Year (xY)
@@ -466,8 +462,6 @@ pdf_file_name_xM = paste0(dir_pdf_out, plot_name_xM)
   dev.off()    
   
   
-
-  
     
   ## -----------------------------------------------------------------------------
   ##
@@ -487,7 +481,6 @@ pdf_file_name_xM = paste0(dir_pdf_out, plot_name_xM)
     simB = simB_xM[,i] 
     spaB_ls <- lapply(ls_spaB_xM, function(df) df[, i]) ## Extract the i column from each data frame in the list
     
-  
     ## Check to see if observed data is available
     obsB_scaled=NULL
     if(i %in% obsB.head$pool_code){
@@ -502,6 +495,7 @@ pdf_file_name_xM = paste0(dir_pdf_out, plot_name_xM)
     
     ## Scale to the average of a given timeframe
     init_months_toscale = init_years_toscale * 12
+    simB_scaled = simB / mean(simB[1:init_years_toscale], na.rm = TRUE)
     spaB_scaled = spaB / mean(spaB[1:init_months_toscale], na.rm = TRUE)
     spaB_scaled_ls = list()
     for(j in 1:length(spa_scenarios)){
@@ -552,6 +546,8 @@ pdf_file_name_xM = paste0(dir_pdf_out, plot_name_xM)
     y_ticks = pretty(seq(min, max, by = (max-min)/10), n = y_break)
     axis(2, at = y_ticks, labels = y_ticks, las = 1, cex.axis = y_cex)
     abline(h=1, col='lightgray')
+    
+    ym_series <- as.Date(paste0(ym_series, "-01")) ## Convert ym_series to Date format (assuming first day of the month)
     
     ## Plot outputs: Ecosim (green line), Ecospace (other lines), Observed (black dots)
     if(length(obsB_scaled)>0) points(year_series, obsB_scaled, pch=16, cex=obs_cex, col = col_obs) ## Plot observed data, if it's present

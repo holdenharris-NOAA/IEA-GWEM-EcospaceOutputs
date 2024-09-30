@@ -1,0 +1,13 @@
+,scenario,nll_spa_obs,nll_spa_sim,nll_sim_obs,mae_spa_obs,mae_spa_sim,mae_sim_obs,weighting
+1,01 Base,3005,1187,3307,325,23,327,none
+4,02 MODIS-ChlA,2977,1799,3307,321,24,327,none
+7,03 MOM6-ChlA,3234,1531,3307,326,26,327,none
+10,04 MOM6-Vint,3052,1418,3307,324,24,327,none
+3,01 Base,6521,2875,7765,488,51,499,root-weighted
+6,02 MODIS-ChlA,6174,4150,7765,482,56,499,root-weighted
+9,03 MOM6-ChlA,7100,3567,7765,496,58,499,root-weighted
+12,04 MOM6-Vint,6770,3233,7765,491,53,499,root-weighted
+2,01 Base,18401,8920,23284,842,148,882,weighted
+5,02 MODIS-ChlA,16781,12735,23284,827,172,882,weighted
+8,03 MOM6-ChlA,19961,10336,23284,868,167,882,weighted
+11,04 MOM6-Vint,19286,9453,23284,855,156,882,weighted

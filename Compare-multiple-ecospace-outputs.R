@@ -16,11 +16,9 @@ sim_scenario = "sim-spa_01"
 obs_TS_name  = "TS_updated_IB13"
 srt_year     = 1980
 spa_scenarios  = c("spa_ST00_base-no-drivers", "spa_ST01a_surf-sal", 
-                   "spa_ST01b_temp", "spa_ST01c_PP-MODIS", 
-                   "spa_ST01c_PP-MOM6")
+                   "spa_ST01b_temp", "spa_ST01c_PP-MODIS")
 spa_scen_names = c("01 No drivers",  "02 Salinity", 
-                   "03 Temperature", "04 PP (MODIS)",
-                   "05 PP (MOM6)")
+                   "03 Temperature", "04 PP (MODIS)")
 
 
 ## User-defined output parameters ----------------------------------------------
@@ -462,10 +460,12 @@ pdf_file_name_xM = paste0(dir_pdf_out, plot_name_xM)
   dev.off()    
   
   
-    
   ## -----------------------------------------------------------------------------
   ##
   ## Plot by month (xM)
+  
+  ## Make Ecosim line thinner and slightly darker
+  col_sim = rgb(0.2, 0.7, .1, alpha = 0.8); sim_lwd = 1
 
   print(paste("Writing", pdf_file_name_xM))
   pdf(pdf_file_name_xM, onefile = TRUE)

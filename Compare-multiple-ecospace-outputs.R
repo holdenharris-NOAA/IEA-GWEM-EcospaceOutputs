@@ -28,6 +28,8 @@ out_file_notes = "test-STEdrivers"
 init_years_toscale = 6 ## In plotting, this sets the "1 line" to the average of this number of years
 plot_name_xY = paste0("BxY_scaled_", init_years_toscale, "y-", out_file_notes, ".PDF")
 plot_name_xM = paste0("BxM_scaled_", init_years_toscale, "y-", out_file_notes, ".PDF")
+sub_plot_name_xY = paste0("Subset_BxY_scaled_", init_years_toscale, "y-", out_file_notes, ".PNG")
+sub_plot_name_xM = paste0("Subset_BxM_scaled_", init_years_toscale, "y-", out_file_notes, ".PNG")
 
 ## Set up output folders -------------------------------------------------------
 dir_out <- "./Scenario_comps/Test_EnvDrivers/" ## Folder where outputs will be stored
@@ -41,6 +43,8 @@ if (!dir.exists(dir_tab_out)) dir.create(dir_tab_out, recursive = TRUE) ## Creat
 folder_name <- paste0(dir_tab_out, "Scaled_", init_years_toscale, "y") ## Folder name based on `init_years_toscale`
 pdf_file_name_xY = paste0(dir_pdf_out, plot_name_xY)
 pdf_file_name_xM = paste0(dir_pdf_out, plot_name_xM)
+sub_file_name_xY = paste0(dir_pdf_out, sub_plot_name_xY)
+sub_file_name_xM = paste0(dir_pdf_out, sub_plot_name_xM)
 
 
   ## -----------------------------------------------------------------------------
@@ -288,7 +292,7 @@ pdf_file_name_xM = paste0(dir_pdf_out, plot_name_xM)
   }; spa_fit_sums
   
   ## Extract of Ecosim fits and append to make one table -------------
-  ## Remove Ecosim columns and add them as scenarios for final table -----------
+  ## Remove Ecosim columns and add them as scenarios for final table 
 
   ## Extract the Ecosim fits
     ecosim_df <- spa_fit_sums %>% 
@@ -561,10 +565,115 @@ pdf_file_name_xM = paste0(dir_pdf_out, plot_name_xM)
     }
   }
   dev.off()    
+
+  
+
   
   
   
   
+    
+## -----------------------------------------------------------------------------
+##
+## Plot subset of biomasses
   
+  print(paste("Writing", sub_file_name_xY))
+  png(sub_file_name_xY, width = 7.5, height = 9, units = "in", res = 800)
+
+  x = year_series
+  fg_sub <- read.csv("./subset_plot_spp_list.csv")
+  group_numbers <- as.numeric(sub("^([0-9]+).*", "\\1", fg_sub$group_name)) # Extract the leading numbers from fg_sub$group_name using a regular expression
   
+  ## Set number of plots per page
+  set.mfrow = f.get_plot_dims(x=num_fg / num_plot_pages, round2=4)
+  par(mfrow=set.mfrow, mar=c(1, 2, 1, 2))
+  plots_per_pg = set.mfrow[1] * set.mfrow[2]
+  
+  ## Set number of plots per page
+  set.mfrow = f.get_plot_dims(x=num_fg / num_plot_pages, round2=4)
+  par(mfrow=set.mfrow, mar=c(1, 2, 1, 2))
+  plots_per_pg = set.mfrow[1] * set.mfrow[2]
+  
+  ## Legend plot -------------------------------------------
+  plot(0, 0, type='n', xlim=c(0,1), ylim=c(0,1), xaxt='n', yaxt='n', 
+       xlab='', ylab='', bty='n') # Create an empty plot
+  legend(leg_pos, inset = 0.1, bg="gray90", box.lty = 0,
+         legend=c('Observed','Ecosim', spa_scen_names),
+         lty = c(NA, sim_lty, rep(spa_lty, length(spaB_scaled_ls))), 
+         lwd = c(NA, sim_lwd+1, rep(spa_lwd+1, length(spaB_scaled_ls))),
+         pch=c(obs_pch, NA, rep(NA, length(spaB_scaled_ls))), 
+         col =c(col_obs, col_sim, col_spa), 
+         cex = leg_cex)
+  
+  for(i in group_numbers){
+    #for(i in 1:19){
+    grp  = fg_df$group_name[i]
+    simB = simB_xY[,i] 
+    spaB_ls <- lapply(ls_spaB_xY, function(df) df[, i]) ## Extract the i column from each data frame in the list
+    
+    ## Check to see if observed data is available
+    if(i %in% obsB.head$pool_code){
+      obs.idx     = which(obsB.head$pool_code==i)
+      obs_df      = suppressWarnings( ## Suppress warnings thrown when obs not available
+        data.frame(year_series, obsB = as.numeric(obsB[ ,obs.idx]))
+      )
+      non_na_obsB = obs_df$obsB[!is.na(obs_df$obsB)] # Extract non-NA values from obs_df$obsB
+      if_else (length(non_na_obsB) < init_years_toscale,
+               years_to_scale <- length(non_na_obsB),
+               years_to_scale <- init_years_toscale)
+      mean_init_years = mean(non_na_obsB[1:years_to_scale]) # Calculate the mean of the first 'init_years_toscale' non-NA values
+      obsB_scaled = obs_df$obsB / mean_init_years # Scale the entire obs_df$obsB by this mean
+    } else obsB_scaled=rep(NA, length(simB))  
+    
+    ## Scale to the average of a given timeframe
+    simB_scaled = simB / mean(simB[1:init_years_toscale], na.rm = TRUE)
+    spaB_scaled_ls = list()
+    for(j in 1:length(spa_scenarios)){
+      spaB               <- spaB_ls[[j]]
+      spaB_scaled        <- spaB / mean(spaB[1:init_years_toscale], na.rm = TRUE)
+      spaB_scaled_ls[[j]] <- spaB_scaled
+    }
+    
+    ##-------------------------------------------------------------------------------  
+    ## PLOT 
+    
+    ## Data plots -------------------------------------------
+    ## Determine y-axis range and initialize plot
+    min = min(obsB_scaled, simB_scaled, unlist(spaB_scaled_ls), na.rm=T) * 0.8
+    max = max(obsB_scaled, simB_scaled, unlist(spaB_scaled_ls), na.rm=T) * 1.2
+    plot(x, rep("", length(x)), type='b', 
+         ylim = c(min, max), xaxt = 'n', yaxt = 'n',
+         xlab = '', ylab='', bty = 'n')
+    title(main = grp, line=-.6, cex.main = main_cex) ## Add title
+    
+    ## Get years from date series
+    posx = as.POSIXlt(date_series)
+    x_years = unique(posx$year + 1900)
+    end_y = max(x_years)
+    start_y = min(x_years)
+    
+    ## Setup X-axis
+    year_series <- seq(as.Date(paste0(start_y, "-01-01")), as.Date(paste0(end_y,   "-12-01")), by = "1 year")
+    num_breaks_x <- round((end_y - start_y) / x_break) ## Determine x-axis breaks
+    x_ticks <- pretty(x, n = num_breaks_x)
+    xlab = paste0("'", substring(format(x_ticks, "%Y"), nchar(format(x_ticks, "%Y")) - 1))
+    axis(1, at = x_ticks, labels = xlab, cex.axis = x_cex, las = x_las)
+    
+    ## Setup Y-axis
+    y_ticks = pretty(seq(min, max, by = (max-min)/10), n = y_break)
+    axis(2, at = y_ticks, labels = y_ticks, las = 1, cex.axis = y_cex)
+    abline(h=1, col='lightgray')
+    
+    ## Plot outputs: Ecosim (green line), Ecospace (blue line), Observed (black dots)
+    if(length(obsB_scaled)>0) points(year_series, obsB_scaled, pch=16, cex=obs_cex, col = col_obs) ## Plot observed data, if it's present
+    lines(x, simB_scaled, lty=sim_lty, lwd = sim_lwd,  col = col_sim) ## Plot Ecosim
+    if(is.list(spaB_scaled_ls)) {     ## If it's a list, loop through each element and plot
+      for(j in seq_along(spaB_scaled_ls)) {
+        lines(x, spaB_scaled_ls[[j]], lty=spa_lty, lwd=spa_lwd, col=col_spa[j]) # Plot each Ecospace projection. Use the j-th color in the palette for each line.
+      }
+      #} else if(is.list(spaB_scaled_ls)==FALSE) { # If it's not a list, but a vector, plot directly
+      #  lines(x, spaB_scaled, lty=1, lwd=spa_lwd, col=col_spa[1]) # Plot Ecospace
+    }
+  } ## End plotting loop
+  dev.off() ## Close plotting device
   

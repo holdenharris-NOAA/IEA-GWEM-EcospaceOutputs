@@ -15,25 +15,46 @@ ewe_name     = "EwE_Outputs"
 sim_scenario = "sim-spa_01"
 obs_TS_name  = "TS_updated_IB13"
 srt_year     = 1980
-spa_scenarios  = c("spa_ST00_base-no-drivers", "spa_ST01a_surf-sal", 
-                   "spa_ST01b_temp", "spa_ST01c_PP-MODIS")
-spa_scen_names = c("01 No drivers",  "02 Salinity", 
-                   "03 Temperature", "04 PP (MODIS)")
 
+## Set up inputs ---------------------------------------------------------------
+## A group of Ecospace simulations to compare are termed an "Experiment"
+## An unused experiment will be commented out
+## Choose which experiment to run:
+experiment_choice <- 1  # Set to 1 for Experiment 1, or 2 for Experiment 2
 
-## User-defined output parameters ----------------------------------------------
+if (experiment_choice == 1) {
+  ## Experiment 1 --------------------------------------------------------------
+  ## Compares scenarios with piece-wise environmental drivers
+  spa_scenarios  = c("spa_ST00_base-no-drivers", "spa_ST01a_surf-sal", 
+                     "spa_ST01b_temp", "spa_ST01c_PP-MODIS")
+  spa_scen_names = c("01 No drivers",  "02 Salinity",   
+                     "03 Temperature", "04 PP (MODIS)")
+  out_file_notes = "test-STEdrivers"  ## label outputs
+  dir_out <- "./Scenario_comps/Test_EnvDrivers/"  ## Folder where outputs will be stored
+  
+} else if (experiment_choice == 2) {
+  ## Experiment 2 --------------------------------------------------------------
+  ## Compares different primary production scenarios
+  spa_scenarios  = c("spa_00", "spa_01", 
+                     "spa_02_MOM6-ISIMIP3a", "spa_03_MOM6-ISIMIP3a_PP-phyc-vint")
+  spa_scen_names = c("01 No PP",     "02 MODIS ChlA", 
+                     "03 MOM6 ChlA", "04 MOM6 Vint Phy")
+  out_file_notes = "comp-PPdrivers"
+  dir_out <- "./Scenario_comps/Compare_ppDrivers/"  ## Folder where outputs will be stored
+}
+
+## Create the output folder if it doesn't exist
+if (!dir.exists(dir_out)) {
+  dir.create(dir_out, recursive = TRUE)  ## Create the folder if it doesn't exist
+}
+
+## User-defined parameters for plotting-----------------------------------------
 num_plot_pages = 4 ## Sets number of pages for PDF file
-today_date <- format(Sys.Date(), "%Y-%m-%d")
-out_file_notes = "test-STEdrivers"
 init_years_toscale = 6 ## In plotting, this sets the "1 line" to the average of this number of years
 plot_name_xY = paste0("BxY_scaled_", init_years_toscale, "y-", out_file_notes, ".PDF")
 plot_name_xM = paste0("BxM_scaled_", init_years_toscale, "y-", out_file_notes, ".PDF")
 sub_plot_name_xY = paste0("Subset_BxY_scaled_", init_years_toscale, "y-", out_file_notes, ".PNG")
 sub_plot_name_xM = paste0("Subset_BxM_scaled_", init_years_toscale, "y-", out_file_notes, ".PNG")
-
-## Set up output folders -------------------------------------------------------
-dir_out <- "./Scenario_comps/Test_EnvDrivers/" ## Folder where outputs will be stored
-if (!dir.exists(dir_out)) dir.create(dir_out, recursive = TRUE) ## Create the folder if it doesn't exist
 
 ## Plot output names
 dir_pdf_out  = paste0(dir_out)  ## Folder for plots
@@ -567,18 +588,12 @@ sub_file_name_xM = paste0(dir_pdf_out, sub_plot_name_xM)
   dev.off()    
 
   
-
-  
-  
-  
-  
-    
 ## -----------------------------------------------------------------------------
 ##
 ## Plot subset of biomasses
   
   print(paste("Writing", sub_file_name_xY))
-  png(sub_file_name_xY, width = 7.5, height = 9, units = "in", res = 800)
+  png(sub_file_name_xY, width = 7.5, height = 8, units = "in", res = 800)
 
   x = year_series
   fg_sub <- read.csv("./subset_plot_spp_list.csv")

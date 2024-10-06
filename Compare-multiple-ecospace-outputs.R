@@ -18,8 +18,7 @@ srt_year     = 1980
 
 ## Set up inputs ---------------------------------------------------------------
 ## A group of Ecospace simulations to compare are termed an "Experiment"
-## An unused experiment will be commented out
-## Choose which experiment to run:
+
 experiment_choice <- 1  # Set to 1 for Experiment 1, or 2 for Experiment 2
 
 if (experiment_choice == 1) {
@@ -31,6 +30,7 @@ if (experiment_choice == 1) {
                      "03 Temperature", "04 PP (MODIS)")
   out_file_notes = "test-STEdrivers"  ## label outputs
   dir_out <- "./Scenario_comps/Test_EnvDrivers/"  ## Folder where outputs will be stored
+  col_spa <- c("darkgoldenrod", "indianred2", "steelblue4", "darkorchid4")
   
 } else if (experiment_choice == 2) {
   ## Experiment 2 --------------------------------------------------------------
@@ -41,6 +41,7 @@ if (experiment_choice == 1) {
                      "03 MOM6 ChlA", "04 MOM6 Vint Phy")
   out_file_notes = "comp-PPdrivers"
   dir_out <- "./Scenario_comps/Compare_ppDrivers/"  ## Folder where outputs will be stored
+  col_spa <- c("goldenrod", "darkorchid3", "deeppink", "blue")
 }
 
 ## Create the output folder if it doesn't exist
@@ -371,7 +372,6 @@ sub_file_name_xM = paste0(dir_pdf_out, sub_plot_name_xM)
   ## Plotting parameters
   col_obs = 'black'
   col_sim = rgb(0.2, 0.7, .1, alpha = 0.6) ## rgb (red, green, blue, alpha)
-  col_spa <- c("darkgoldenrod", "indianred2", "steelblue4", "darkorchid4", "darkgreen")
   #col_spa <- adjustcolor(col_spa, alpha.f = 1) ## Adjust transparancy
   
   num_plot_pages = 4; x_break = 5; y_break = 4; x_cex = 0.9; y_cex = 0.9; x_las = 2;
@@ -593,7 +593,7 @@ sub_file_name_xM = paste0(dir_pdf_out, sub_plot_name_xM)
 ## Plot subset of biomasses
   
   print(paste("Writing", sub_file_name_xY))
-  png(sub_file_name_xY, width = 7.5, height = 8, units = "in", res = 800)
+  png(sub_file_name_xY, width = 7, height = 7, units = "in", res = 800)
 
   x = year_series
   fg_sub <- read.csv("./subset_plot_spp_list.csv")

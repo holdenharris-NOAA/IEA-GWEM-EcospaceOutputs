@@ -1,16 +1,16 @@
-"scenario","ssr_spa_obs","ssr_spa_sim","mae_spa_obs","mae_spa_sim","weighting"
-"00 Ecosim",975,NA,69,NA,"none"
-"01 No drivers",1068,811,72,249,"none"
-"02 Salinity",1060,810,71,248,"none"
-"03 Temperature",1006,708,66,237,"none"
-"04 PP (MODIS)",1007,731,65,223,"none"
-"00 Ecosim",2069,NA,149,NA,"root-weighted"
-"01 No drivers",2822,1568,190,307,"root-weighted"
-"02 Salinity",2797,1561,188,306,"root-weighted"
-"03 Temperature",2600,1214,170,273,"root-weighted"
-"04 PP (MODIS)",2546,1313,165,268,"root-weighted"
-"00 Ecosim",6147,NA,442,NA,"weighted"
-"01 No drivers",8990,4134,606,512,"weighted"
-"02 Salinity",8906,4106,598,509,"weighted"
-"03 Temperature",8256,2915,539,401,"weighted"
-"04 PP (MODIS)",7935,3269,514,425,"weighted"
+scenario,ssr_spa_obs,ssr_spa_sim,mae_spa_obs,mae_spa_sim,weighting
+00 Ecosim,975,NA,69,NA,none
+01 No drivers,1068,811,72,249,none
+02 Salinity,1060,810,71,248,none
+03 Temperature,1006,708,66,237,none
+04 PP (MODIS),1007,731,65,223,none
+00 Ecosim,2069,NA,149,NA,root-weighted
+01 No drivers,2822,1568,190,307,root-weighted
+02 Salinity,2797,1561,188,306,root-weighted
+03 Temperature,2600,1214,170,273,root-weighted
+04 PP (MODIS),2546,1313,165,268,root-weighted
+00 Ecosim,6147,NA,442,NA,weighted
+01 No drivers,8990,4134,606,512,weighted
+02 Salinity,8906,4106,598,509,weighted
+03 Temperature,8256,2915,539,401,weighted
+04 PP (MODIS),7935,3269,514,425,weighted

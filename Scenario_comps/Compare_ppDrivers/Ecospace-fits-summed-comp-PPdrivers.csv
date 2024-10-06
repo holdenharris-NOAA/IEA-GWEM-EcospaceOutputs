@@ -1,16 +1,16 @@
-"scenario","ssr_spa_obs","ssr_spa_sim","mae_spa_obs","mae_spa_sim","weighting"
-"00 Ecosim",975,NA,69,NA,"none"
-"01 No PP",999,706,66,236,"none"
-"02 MODIS ChlA",948,765,59,232,"none"
-"03 MOM6 ChlA",976,917,62,277,"none"
-"04 MOM6 Vint Phy",859,746,54,225,"none"
-"00 Ecosim",2069,NA,149,NA,"root-weighted"
-"01 No PP",2573,1206,168,272,"root-weighted"
-"02 MODIS ChlA",2348,1397,146,280,"root-weighted"
-"03 MOM6 ChlA",2563,1714,163,337,"root-weighted"
-"04 MOM6 Vint Phy",2098,1287,132,268,"root-weighted"
-"00 Ecosim",6147,NA,442,NA,"weighted"
-"01 No PP",8156,2890,532,399,"weighted"
-"02 MODIS ChlA",7219,3516,449,449,"weighted"
-"03 MOM6 ChlA",8118,4427,516,548,"weighted"
-"04 MOM6 Vint Phy",6394,3176,403,421,"weighted"
+scenario,ssr_spa_obs,ssr_spa_sim,mae_spa_obs,mae_spa_sim,weighting
+00 Ecosim,975,NA,69,NA,none
+01 No PP,999,706,66,236,none
+02 MODIS ChlA,948,765,59,232,none
+03 MOM6 ChlA,976,917,62,277,none
+04 MOM6 Vint Phy,859,746,54,225,none
+00 Ecosim,2069,NA,149,NA,root-weighted
+01 No PP,2573,1206,168,272,root-weighted
+02 MODIS ChlA,2348,1397,146,280,root-weighted
+03 MOM6 ChlA,2563,1714,163,337,root-weighted
+04 MOM6 Vint Phy,2098,1287,132,268,root-weighted
+00 Ecosim,6147,NA,442,NA,weighted
+01 No PP,8156,2890,532,399,weighted
+02 MODIS ChlA,7219,3516,449,449,weighted
+03 MOM6 ChlA,8118,4427,516,548,weighted
+04 MOM6 Vint Phy,6394,3176,403,421,weighted

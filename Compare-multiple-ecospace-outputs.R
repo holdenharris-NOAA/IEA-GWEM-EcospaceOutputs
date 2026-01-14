@@ -37,8 +37,8 @@ if (experiment_choice == 1) {
 } else if (experiment_choice == 2) {
   ## Experiment 2 --------------------------------------------------------------
   ## Compares different primary production scenarios
-  spa_scenarios  = c("spa_00", "spa_01", 
-                     "spa_02_MOM6-ISIMIP3a", "spa_03_MOM6-ISIMIP3a_PP-phyc-vint")
+  spa_scenarios  = c("exp2_01_base-no-PP", "exp2_02_MODIS", 
+                     "exp2_03_MOM6-surf-chla", "exp2_04_MOM6-phyc-vint")
   spa_scen_names = c("01 No PP",     "02 MODIS ChlA", 
                      "03 MOM6 ChlA", "04 MOM6 Vint Phy")
   out_file_notes = "comp-PPdrivers"
@@ -76,7 +76,6 @@ pdf_file_name_xY = paste0(dir_pdf_out, plot_name_xY)
 pdf_file_name_xM = paste0(dir_pdf_out, plot_name_xM)
 sub_file_name_xY = paste0(dir_pdf_out, sub_plot_name_xY)
 sub_file_name_xM = paste0(dir_pdf_out, sub_plot_name_xM)
-
 
   ## -----------------------------------------------------------------------------
   ##
@@ -150,6 +149,25 @@ sub_file_name_xM = paste0(dir_pdf_out, sub_plot_name_xM)
       group_name = paste(sprintf("%02d", 1:num_fg),
                          gsub("_", " ", fg_names))
     )
+    
+    ## -----------------------------------------------------------------------------
+    ## Shorten functional group names (word-safe replacements, all lowercase)
+    
+    library(stringr)
+    
+    repl_map <- c(
+      "\\bcoastal\\b"      = "cstl.",
+      "\\bdemersal\\b"     = "dmrsl.",
+      "\\bpiscivores\\b"   = "piscvrs.",
+      "\\bbenthic\\b"      = "benth.",
+      "\\binvertebrate\\b" = "invert.",
+      "\\blarge\\b"        = "lrg.",
+      "\\bfeeders\\b"      = "fdrs."
+    )
+    
+    fg_df$group_name_short <- fg_df$group_name |>
+      str_to_lower() |>
+      str_replace_all(repl_map)
     
     ## Set row and column names
     rownames(spaB_xY) = rownames(spaC_xY) = years
@@ -410,7 +428,7 @@ sub_file_name_xM = paste0(dir_pdf_out, sub_plot_name_xM)
   
   for(i in 1:num_fg){
       #for(i in 1:19){
-    grp  = fg_df$group_name[i]
+    grp  = fg_df$group_name_short[i]
     simB = simB_xY[,i] 
     spaB_ls <- lapply(ls_spaB_xY, function(df) df[, i]) ## Extract the i column from each data frame in the list
     
@@ -510,7 +528,7 @@ sub_file_name_xM = paste0(dir_pdf_out, sub_plot_name_xM)
   
   for(i in 1:num_fg){
     #  for(i in 1:19){
-    grp  = fg_df$group_name[i]
+    grp  = fg_df$group_name_short[i]
     simB = simB_xM[,i] 
     spaB_ls <- lapply(ls_spaB_xM, function(df) df[, i]) ## Extract the i column from each data frame in the list
     
@@ -595,7 +613,6 @@ sub_file_name_xM = paste0(dir_pdf_out, sub_plot_name_xM)
   }
   dev.off()    
 
-  
 ## -----------------------------------------------------------------------------
 ##
 ## Plot subset of biomasses
@@ -630,7 +647,7 @@ sub_file_name_xM = paste0(dir_pdf_out, sub_plot_name_xM)
   
   for(i in group_numbers){
     #for(i in 1:19){
-    grp  = fg_df$group_name[i]
+    grp  = fg_df$group_name_short[i]
     simB = simB_xY[,i] 
     spaB_ls <- lapply(ls_spaB_xY, function(df) df[, i]) ## Extract the i column from each data frame in the list
     
@@ -667,7 +684,7 @@ sub_file_name_xM = paste0(dir_pdf_out, sub_plot_name_xM)
     plot(x, rep("", length(x)), type='b', 
          ylim = c(min, max), xaxt = 'n', yaxt = 'n',
          xlab = '', ylab='', bty = 'n')
-    title(main = grp, line=-.6, cex.main = main_cex) ## Add title
+    title(main = fg_df$group_name_short[i], line=-.6, cex.main = main_cex) ## Add title
     
     ## Get years from date series
     posx = as.POSIXlt(date_series)
